@@ -1,0 +1,19 @@
+{
+  "name": "Wasm::Emitter",
+  "description": "Emit the WebAssembly binary format.",
+  "version": "0.1",
+  "perl": "6.*",
+  "authors": [
+    "Jonathan Worthington <jnthn@jnthn.net>"
+  ],
+  "auth": "zef:jnthn",
+  "depends": [
+    "LEB128"
+  ],
+  "build-depends": [],
+  "test-depends": [],
+  "provides": {},
+  "resources": [],
+  "license": "MIT",
+  "source-url": "Write me!"
+}

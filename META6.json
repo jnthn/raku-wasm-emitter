@@ -12,7 +12,10 @@
   ],
   "build-depends": [],
   "test-depends": [],
-  "provides": {},
+  "provides": {
+    "Wasm::Emitter": "lib/Wasm/Emitter.rakumod",
+    "Wasm::Emitter::Types": "lib/Wasm/Emitter/Types.rakumod"
+  },
   "resources": [],
   "license": "MIT",
   "source-url": "Write me!"

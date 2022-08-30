@@ -13,6 +13,9 @@ class Wasm::Emitter {
     #| Function imports.
     has Wasm::Emitter::FunctionImport @!function-imports;
 
+    #| Declared memories, with their limits.
+    has Wasm::Emitter::Types::LimitType @!memories;
+
     #| Returns a type index for a function type. If the function type was
     #| already registered, returns the existing index; failing that, adds
     #| it under a new index.
@@ -28,6 +31,11 @@ class Wasm::Emitter {
     method import-function(Str $module, Str $name, Int $type-index --> Int) {
         @!function-imports.push: Wasm::Emitter::FunctionImport.new(:$module, :$name, :$type-index);
         @!function-imports.end
+    }
+
+    method add-memory(Wasm::Emitter::Types::LimitType $limits --> Int) {
+        @!memories.push($limits);
+        @!memories.end
     }
 
     #| Assemble the produced declarations into a final output.
@@ -54,6 +62,13 @@ class Wasm::Emitter {
             $output.append($import-section);
             $pos += $import-section.elems;
         }
+        if @!memories {
+            my $memory-section = self!assemble-memory-section();
+            $output.write-uint8($pos++, 5);
+            $pos += encode-leb128-unsigned($memory-section.elems, $output, $pos);
+            $output.append($memory-section);
+            $pos += $memory-section.elems;
+        }
 
         $output
     }
@@ -74,6 +89,16 @@ class Wasm::Emitter {
         my uint $import-count = [+] @!function-imports.elems; #`( TODO et al )
         $pos += encode-leb128-unsigned($import-count, $output, $pos);
         for @!function-imports {
+            $pos += .emit($output, $pos);
+        }
+        return $output;
+    }
+
+    method !assemble-memory-section(--> Buf) {
+        my $output = Buf.new;
+        my int $pos = 0;
+        $pos += encode-leb128-unsigned(@!memories.elems, $output, $pos);
+        for @!memories {
             $pos += .emit($output, $pos);
         }
         return $output;

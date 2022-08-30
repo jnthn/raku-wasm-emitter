@@ -156,3 +156,33 @@ class FunctionType does Type {
 sub functype(ResultType $in, ResultType $out) is export {
     FunctionType.new(:$in, :$out)
 }
+
+#| A limits type.
+class LimitType does Type {
+    has Int $.min is required;
+    has Int $.max;
+
+    method emit(Buf $into, uint $offset --> uint) {
+        my int $pos = $offset;
+        with $!max {
+            $into.write-uint8($pos++, 0x01);
+            $pos += encode-leb128-unsigned($!min, $into, $pos);
+            $pos += encode-leb128-unsigned($!max, $into, $pos);
+        }
+        else {
+            $into.write-uint8($pos++, 0x00);
+            $pos += encode-leb128-unsigned($!min, $into, $pos);
+        }
+        $pos - $offset
+    }
+}
+
+#| Create a limits type with a minimum and unbounded maximum.
+multi sub limitstype(Int $min) is export {
+    LimitType.new(:$min)
+}
+
+#| Create a limits type with a minimum and maximum.
+multi sub limitstype(Int $min, Int $max) is export {
+    LimitType.new(:$min, :$max)
+}

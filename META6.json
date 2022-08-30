@@ -14,6 +14,8 @@
   "test-depends": [],
   "provides": {
     "Wasm::Emitter": "lib/Wasm/Emitter.rakumod",
+    "Wasm::Emitter::Imports": "lib/Wasm/Emitter/Imports.rakumod",
+    "Wasm::Emitter::Name": "lib/Wasm/Emitter/Name.rakumod",
     "Wasm::Emitter::Types": "lib/Wasm/Emitter/Types.rakumod"
   },
   "resources": [],

@@ -59,6 +59,20 @@ if has-wasmtime() {
         pass 'Assembled module with some function types';
         is-wasmtime-output $buf, '';
     }
+
+    subtest 'Function imports' => {
+        my $emitter = Wasm::Emitter.new;
+        my $typeidx = $emitter.intern-function-type:
+                functype(resulttype(i32(), i32(), i32(), i32()), resulttype(i32()));
+        is $emitter.import-function("wasi_unstable", "fd_write", $typeidx),
+                0, 'First imported function got expected 0 index';
+        is $emitter.import-function("wasi_unstable", "fd_read", $typeidx),
+                1, 'Second imported function got expected 1 index';
+
+        my $buf = $emitter.assemble();
+        pass 'Assembled module with some function imports';
+        is-wasmtime-output $buf, '';
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

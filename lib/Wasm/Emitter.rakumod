@@ -1,5 +1,6 @@
 use v6.d;
 use LEB128;
+use Wasm::Emitter::Imports;
 use Wasm::Emitter::Types;
 
 #| Emitter for a binary Wasm module. An instance of this represents a module.
@@ -8,6 +9,9 @@ use Wasm::Emitter::Types;
 class Wasm::Emitter {
     #| Function types, all distinct.
     has Wasm::Emitter::Types::FunctionType @!function-types;
+
+    #| Function imports.
+    has Wasm::Emitter::FunctionImport @!function-imports;
 
     #| Returns a type index for a function type. If the function type was
     #| already registered, returns the existing index; failing that, adds
@@ -18,6 +22,12 @@ class Wasm::Emitter {
         }
         @!function-types.push($type);
         @!function-types.end
+    }
+
+    #| Add a function import.
+    method import-function(Str $module, Str $name, Int $type-index --> Int) {
+        @!function-imports.push: Wasm::Emitter::FunctionImport.new(:$module, :$name, :$type-index);
+        @!function-imports.end
     }
 
     #| Assemble the produced declarations into a final output.
@@ -35,6 +45,14 @@ class Wasm::Emitter {
             $output.write-uint8($pos++, 1);
             $pos += encode-leb128-unsigned($type-section.elems, $output, $pos);
             $output.append($type-section);
+            $pos += $type-section.elems;
+        }
+        if @!function-imports #`( TODO et al ) {
+            my $import-section = self!assemble-import-section();
+            $output.write-uint8($pos++, 2);
+            $pos += encode-leb128-unsigned($import-section.elems, $output, $pos);
+            $output.append($import-section);
+            $pos += $import-section.elems;
         }
 
         $output
@@ -45,6 +63,17 @@ class Wasm::Emitter {
         my int $pos = 0;
         $pos += encode-leb128-unsigned(@!function-types.elems, $output, $pos);
         for @!function-types {
+            $pos += .emit($output, $pos);
+        }
+        return $output;
+    }
+
+    method !assemble-import-section() {
+        my $output = Buf.new;
+        my int $pos = 0;
+        my uint $import-count = [+] @!function-imports.elems; #`( TODO et al )
+        $pos += encode-leb128-unsigned($import-count, $output, $pos);
+        for @!function-imports {
             $pos += .emit($output, $pos);
         }
         return $output;

@@ -83,6 +83,16 @@ if has-wasmtime() {
         pass 'Assembled module with some function imports';
         is-wasmtime-output $buf, '';
     }
+
+    subtest 'Declare and export a memory' => {
+        my $emitter = Wasm::Emitter.new;
+        my $memory = $emitter.add-memory(limitstype(1));
+        $emitter.export-memory("memory", $memory);
+
+        my $buf = $emitter.assemble();
+        pass 'Assembled module with some exported memory';
+        is-wasmtime-output $buf, '';
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

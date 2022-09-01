@@ -1,6 +1,8 @@
 use v6.d;
 use LEB128;
+use Wasm::Emitter::Data;
 use Wasm::Emitter::Exports;
+use Wasm::Emitter::Expression;
 use Wasm::Emitter::Imports;
 use Wasm::Emitter::Types;
 
@@ -19,6 +21,9 @@ class Wasm::Emitter {
 
     #| Declared exports.
     has Wasm::Emitter::Export @!exports;
+
+    #| Declared data sections.
+    has Wasm::Emitter::Data @!data;
 
     #| Returns a type index for a function type. If the function type was
     #| already registered, returns the existing index; failing that, adds
@@ -52,6 +57,18 @@ class Wasm::Emitter {
             die "Memory index out of range";
         }
         @!exports.push: Wasm::Emitter::MemoryExport.new(:$name, :$memory-index);
+    }
+
+    #| Declare a passive data section.
+    method passive-data(Blob $data --> Int) {
+        @!data.push: Wasm::Emitter::Data::Passive.new(:$data);
+        @!data.end
+    }
+
+    #| Declare an active data section.
+    method active-data(Blob $data, Wasm::Emitter::Expression $offset --> Int) {
+        @!data.push: Wasm::Emitter::Data::Active.new(:$data, :$offset);
+        @!data.end
     }
 
     #| Assemble the produced declarations into a final output.
@@ -92,6 +109,20 @@ class Wasm::Emitter {
             $output.append($export);
             $pos += $export.elems;
         }
+        if @!data {
+            my $data-count = self!assemble-data-count-section();
+            $output.write-uint8($pos++, 12);
+            $pos += encode-leb128-unsigned($data-count.elems, $output, $pos);
+            $output.append($data-count);
+            $pos += $data-count.elems;
+        }
+        if @!data {
+            my $data = self!assemble-data-section();
+            $output.write-uint8($pos++, 11);
+            $pos += encode-leb128-unsigned($data.elems, $output, $pos);
+            $output.append($data);
+            $pos += $data.elems;
+        }
 
         $output
     }
@@ -117,6 +148,14 @@ class Wasm::Emitter {
 
     method !assemble-export-section(--> Buf) {
         assemble-simple-section(@!exports)
+    }
+
+    method !assemble-data-count-section(--> Buf) {
+        return encode-leb128-unsigned(@!data.elems);
+    }
+
+    method !assemble-data-section(--> Buf) {
+        assemble-simple-section(@!data)
     }
 
     sub assemble-simple-section(@elements --> Buf) {

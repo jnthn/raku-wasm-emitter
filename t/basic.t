@@ -1,5 +1,6 @@
 use v6.d;
 use Wasm::Emitter;
+use Wasm::Emitter::Expression;
 use Wasm::Emitter::Types;
 use Test;
 
@@ -91,6 +92,21 @@ if has-wasmtime() {
 
         my $buf = $emitter.assemble();
         pass 'Assembled module with some exported memory';
+        is-wasmtime-output $buf, '';
+    }
+
+    subtest 'Declare data' => {
+        my $emitter = Wasm::Emitter.new;
+        $emitter.add-memory(limitstype(1));
+        is $emitter.passive-data("hello world\n".encode('utf-8')), 0,
+                'First (passive) data declaration at index zero';
+        my $expression = Wasm::Emitter::Expression.new;
+        $expression.i32-const(8);
+        is $emitter.active-data("hello world\n".encode('utf-8'), $expression), 1,
+                'Second (active) data declaration at index zero';
+
+        my $buf = $emitter.assemble();
+        pass 'Assembled module with data section';
         is-wasmtime-output $buf, '';
     }
 }

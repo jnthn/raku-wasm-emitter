@@ -120,7 +120,20 @@ if has-wasmtime() {
                 0, 'Correct index for first added function';
 
         my $buf = $emitter.assemble();
-        pass 'Assembled module with data section';
+        pass 'Assembled module with function and code sections';
+        is-wasmtime-output $buf, '';
+    }
+
+    subtest 'Function export' => {
+        my $emitter = Wasm::Emitter.new;
+        my $type-index = $emitter.intern-function-type(functype(resulttype(), resulttype(i32())));
+        my $expression = Wasm::Emitter::Expression.new;
+        $expression.i32-const(42);
+        my $func-index = $emitter.add-function(Wasm::Emitter::Function.new(:$type-index, :$expression));
+        $emitter.export-function('answer', $func-index);
+
+        my $buf = $emitter.assemble();
+        pass 'Assembled module with function export';
         is-wasmtime-output $buf, '';
     }
 }

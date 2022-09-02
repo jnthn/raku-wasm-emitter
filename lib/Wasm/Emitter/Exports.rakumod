@@ -17,6 +17,18 @@ package Wasm::Emitter {
         method emit-desc(Buf $into, uint $offset --> uint) { ... }
     }
 
+    #| A function export.
+    class FunctionExport does Export {
+        has Int $.function-index is required;
+
+        method emit-desc(Buf $into, uint $offset --> uint) {
+            my int $pos = $offset;
+            $into.write-uint8($pos++, 0x00);
+            $pos += encode-leb128-unsigned($!function-index, $into, $pos);
+            $pos - $offset
+        }
+    }
+
     #| A memory export.
     class MemoryExport does Export {
         has Int $.memory-index is required;

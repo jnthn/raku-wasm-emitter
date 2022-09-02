@@ -55,6 +55,14 @@ class Wasm::Emitter {
         @!memories.end
     }
 
+    #| Export a function.
+    method export-function(Str $name, Int $function-index --> Nil) {
+        if $function-index < 0 || $function-index >= (@!function-imports.elems + @!functions.elems) {
+            die "Function index out of range";
+        }
+        @!exports.push: Wasm::Emitter::FunctionExport.new(:$name, :$function-index);
+    }
+
     #| Export a memory.
     method export-memory(Str $name, Int $memory-index --> Nil) {
         if $memory-index < 0 || $memory-index >= @!memories.elems {

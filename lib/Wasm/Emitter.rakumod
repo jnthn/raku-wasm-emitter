@@ -86,7 +86,7 @@ class Wasm::Emitter {
     #| Declare a function.
     method add-function(Wasm::Emitter::Function $function --> Int) {
         @!functions.push($function);
-        @!functions.end
+        @!function-imports + @!functions.end
     }
 
     #| Assemble the produced declarations into a final output.

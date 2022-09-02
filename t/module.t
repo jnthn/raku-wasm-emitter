@@ -9,7 +9,7 @@ sub has-wasmtime() {
     so qqx/wasmtime -h/
 }
 
-sub is-wasmtime-output(Buf $wasm, $expected) {
+sub is-wasm-accepted(Buf $wasm) {
     # Write WASM to a temporary file.
     my $temp-file = $*TMPDIR.add("raku-wasm-$*PID.wasm");
     spurt $temp-file, $wasm;
@@ -17,12 +17,9 @@ sub is-wasmtime-output(Buf $wasm, $expected) {
 
     # Try running it.
     my $exitcode = -1;
-    my $output = '';
     react {
         my $proc = Proc::Async.new('wasmtime', $temp-file);
-        whenever $proc.stdout {
-            $output ~= $_;
-        }
+        whenever $proc.stdout { #`( drop ) }
         whenever $proc.stderr.lines {
             diag $_;
         }
@@ -30,10 +27,7 @@ sub is-wasmtime-output(Buf $wasm, $expected) {
             $exitcode = .exitcode;
         }
     }
-
-    # Analyze results.
     is $exitcode, 0, "wasmtime exitted successfully";
-    ok $output ~~ $expected, "Correct output";
 }
 
 if has-wasmtime() {
@@ -41,7 +35,7 @@ if has-wasmtime() {
         my $emitter = Wasm::Emitter.new;
         my $buf = $emitter.assemble();
         pass 'Assembled empty module';
-        is-wasmtime-output $buf, '';
+        is-wasm-accepted $buf;
     }
 
     subtest 'Function types' => {
@@ -59,7 +53,7 @@ if has-wasmtime() {
 
         my $buf = $emitter.assemble();
         pass 'Assembled module with some function types';
-        is-wasmtime-output $buf, '';
+        is-wasm-accepted $buf;
     }
 
     subtest 'Function imports' => {
@@ -73,7 +67,7 @@ if has-wasmtime() {
 
         my $buf = $emitter.assemble();
         pass 'Assembled module with some function imports';
-        is-wasmtime-output $buf, '';
+        is-wasm-accepted $buf;
     }
 
     subtest 'Declare a memory' => {
@@ -83,7 +77,7 @@ if has-wasmtime() {
 
         my $buf = $emitter.assemble();
         pass 'Assembled module with some function imports';
-        is-wasmtime-output $buf, '';
+        is-wasm-accepted $buf;
     }
 
     subtest 'Declare and export a memory' => {
@@ -93,7 +87,7 @@ if has-wasmtime() {
 
         my $buf = $emitter.assemble();
         pass 'Assembled module with some exported memory';
-        is-wasmtime-output $buf, '';
+        is-wasm-accepted $buf;
     }
 
     subtest 'Declare data' => {
@@ -108,7 +102,7 @@ if has-wasmtime() {
 
         my $buf = $emitter.assemble();
         pass 'Assembled module with data section';
-        is-wasmtime-output $buf, '';
+        is-wasm-accepted $buf;
     }
 
     subtest 'Function declaration' => {
@@ -121,7 +115,7 @@ if has-wasmtime() {
 
         my $buf = $emitter.assemble();
         pass 'Assembled module with function and code sections';
-        is-wasmtime-output $buf, '';
+        is-wasm-accepted $buf;
     }
 
     subtest 'Function export' => {
@@ -134,7 +128,7 @@ if has-wasmtime() {
 
         my $buf = $emitter.assemble();
         pass 'Assembled module with function export';
-        is-wasmtime-output $buf, '';
+        is-wasm-accepted $buf;
     }
 }
 else {

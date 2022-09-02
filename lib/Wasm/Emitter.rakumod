@@ -3,6 +3,7 @@ use LEB128;
 use Wasm::Emitter::Data;
 use Wasm::Emitter::Exports;
 use Wasm::Emitter::Expression;
+use Wasm::Emitter::Function;
 use Wasm::Emitter::Imports;
 use Wasm::Emitter::Types;
 
@@ -24,6 +25,9 @@ class Wasm::Emitter {
 
     #| Declared data sections.
     has Wasm::Emitter::Data @!data;
+
+    #| Declared functions.
+    has Wasm::Emitter::Function @!functions;
 
     #| Returns a type index for a function type. If the function type was
     #| already registered, returns the existing index; failing that, adds
@@ -71,6 +75,12 @@ class Wasm::Emitter {
         @!data.end
     }
 
+    #| Declare a function.
+    method add-function(Wasm::Emitter::Function $function --> Int) {
+        @!functions.push($function);
+        @!functions.end
+    }
+
     #| Assemble the produced declarations into a final output.
     method assemble(--> Buf) {
         # Emit header.
@@ -95,6 +105,13 @@ class Wasm::Emitter {
             $output.append($import-section);
             $pos += $import-section.elems;
         }
+        if @!functions {
+            my $func-section = self!assemble-function-section();
+            $output.write-uint8($pos++, 3);
+            $pos += encode-leb128-unsigned($func-section.elems, $output, $pos);
+            $output.append($func-section);
+            $pos += $func-section.elems;
+        }
         if @!memories {
             my $memory-section = self!assemble-memory-section();
             $output.write-uint8($pos++, 5);
@@ -115,6 +132,13 @@ class Wasm::Emitter {
             $pos += encode-leb128-unsigned($data-count.elems, $output, $pos);
             $output.append($data-count);
             $pos += $data-count.elems;
+        }
+        if @!functions {
+            my $code-section = self!assemble-code-section();
+            $output.write-uint8($pos++, 10);
+            $pos += encode-leb128-unsigned($code-section.elems, $output, $pos);
+            $output.append($code-section);
+            $pos += $code-section.elems;
         }
         if @!data {
             my $data = self!assemble-data-section();
@@ -142,6 +166,16 @@ class Wasm::Emitter {
         return $output;
     }
 
+    method !assemble-function-section(--> Buf) {
+        my $output = Buf.new;
+        my int $pos = 0;
+        $pos += encode-leb128-unsigned(@!functions.elems, $output, $pos);
+        for @!functions {
+            $pos += encode-leb128-unsigned(.type-index, $output, $pos);
+        }
+        return $output;
+    }
+
     method !assemble-memory-section(--> Buf) {
         assemble-simple-section(@!memories)
     }
@@ -152,6 +186,10 @@ class Wasm::Emitter {
 
     method !assemble-data-count-section(--> Buf) {
         return encode-leb128-unsigned(@!data.elems);
+    }
+
+    method !assemble-code-section(--> Buf) {
+        assemble-simple-section(@!functions)
     }
 
     method !assemble-data-section(--> Buf) {

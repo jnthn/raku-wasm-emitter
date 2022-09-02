@@ -1,6 +1,7 @@
 use v6.d;
 use Wasm::Emitter;
 use Wasm::Emitter::Expression;
+use Wasm::Emitter::Function;
 use Wasm::Emitter::Types;
 use Test;
 
@@ -104,6 +105,19 @@ if has-wasmtime() {
         $expression.i32-const(8);
         is $emitter.active-data("hello world\n".encode('utf-8'), $expression), 1,
                 'Second (active) data declaration at index zero';
+
+        my $buf = $emitter.assemble();
+        pass 'Assembled module with data section';
+        is-wasmtime-output $buf, '';
+    }
+
+    subtest 'Function declaration' => {
+        my $emitter = Wasm::Emitter.new;
+        my $type-index = $emitter.intern-function-type(functype(resulttype(), resulttype(i32())));
+        my $expression = Wasm::Emitter::Expression.new;
+        $expression.i32-const(42);
+        is $emitter.add-function(Wasm::Emitter::Function.new(:$type-index, :$expression)),
+                0, 'Correct index for first added function';
 
         my $buf = $emitter.assemble();
         pass 'Assembled module with data section';

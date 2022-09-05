@@ -1,6 +1,7 @@
 use v6.d;
 use LEB128;
 use Wasm::Emitter::Expression;
+use Wasm::Emitter::Types;
 
 #| A WebAssembly function.
 class Wasm::Emitter::Function {
@@ -9,6 +10,16 @@ class Wasm::Emitter::Function {
 
     #| The expression making up the function body.
     has Wasm::Emitter::Expression $.expression is required;
+
+    #| Declared locals.
+    has Wasm::Emitter::Types::ValueType @!locals;
+
+    #| Declare a local of the specified value type. Returns the index of the
+    #| declared local.
+    method declare-local(Wasm::Emitter::Types::ValueType $type --> Int) {
+        @!locals.push($type);
+        @!locals.end
+    }
 
     method emit(Buf $into, uint $offset --> uint) {
         my int $pos = $offset;
@@ -22,10 +33,28 @@ class Wasm::Emitter::Function {
     }
 
     method !form-locals(--> Buf) {
-        # Locals NYI, so just return an empty vector.
+        # Compress locals by detecting sequences of identical types.
+        my @run-length-encoded;
+        my Wasm::Emitter::Types::ValueType $cur-type;
+        my Int $cur-count = 0;
+        for @!locals {
+             if $_ !=== $cur-type {
+                 @run-length-encoded.push($cur-type => $cur-count) if $cur-count;
+                 $cur-count = 0;
+            }
+            $cur-type = $_;
+            $cur-count++;
+        }
+        @run-length-encoded.push($cur-type => $cur-count) if $cur-count;
+
+        # Emit compressed type vector.
         my $output = Buf.new;
         my int $pos = 0;
-        $pos += encode-leb128-unsigned(0, $output, $pos);
+        $pos += encode-leb128-unsigned(@run-length-encoded.elems, $output, $pos);
+        for @run-length-encoded {
+            $pos += encode-leb128-unsigned(.value, $output, $pos);
+            $pos += .key.emit($output, $pos);
+        }
         return $output;
     }
 }

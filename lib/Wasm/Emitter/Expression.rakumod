@@ -16,6 +16,21 @@ class Wasm::Emitter::Expression {
         $!code.write-uint8($!pos++, 0x1A);
     }
 
+    method local-get(Int $local-index --> Nil) {
+        $!code.write-uint8($!pos++, 0x20);
+        $!pos += encode-leb128-unsigned($local-index, $!code, $!pos);
+    }
+
+    method local-set(Int $local-index --> Nil) {
+        $!code.write-uint8($!pos++, 0x21);
+        $!pos += encode-leb128-unsigned($local-index, $!code, $!pos);
+    }
+
+    method local-tee(Int $local-index --> Nil) {
+        $!code.write-uint8($!pos++, 0x22);
+        $!pos += encode-leb128-unsigned($local-index, $!code, $!pos);
+    }
+
     method i32-store(Int :$align = 2, Int :$offset = 0 --> Nil) {
         $!code.write-uint8($!pos++, 0x36);
         self!mem-arg($align, $offset);

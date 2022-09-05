@@ -61,6 +61,25 @@ if has-wasmtime() {
             test-nullary $expression, $type, '12345';
         }
     }
+
+    subtest 'Locals and instructions (get/set/tee)' => {
+        my $emitter = Wasm::Emitter.new;
+        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
+        my $local-id-a = $function.declare-local(i32());
+        my $local-id-b = $function.declare-local(i32());
+        $expression.i32-const(99);
+        $expression.local-set($local-id-a);
+        $expression.local-get($local-id-a);
+        $expression.local-tee($local-id-b);
+        $expression.drop;
+        $expression.local-get($local-id-b);
+        $emitter.export-function('test', $emitter.add-function($function));
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [], '99';
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

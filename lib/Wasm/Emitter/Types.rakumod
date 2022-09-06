@@ -43,7 +43,7 @@ sub i64() is export {
 }
 
 #| 32-bit float type.
-class N32 does NumericType {
+class F32 does NumericType {
     method emit(Buf $into, uint $offset --> uint) {
         $into.write-uint8($offset, 0x7D);
         1
@@ -51,12 +51,12 @@ class N32 does NumericType {
 }
 
 #| Create a 32-bit float type.
-sub n32() is export {
-    BEGIN N32.new
+sub f32() is export {
+    BEGIN F32.new
 }
 
 #| 64-bit float type.
-class N64 does NumericType {
+class F64 does NumericType {
     method emit(Buf $into, uint $offset --> uint) {
         $into.write-uint8($offset, 0x7C);
         1
@@ -64,8 +64,8 @@ class N64 does NumericType {
 }
 
 #| Create a 64-bit float type.
-sub n64() is export {
-    BEGIN N64.new
+sub f64() is export {
+    BEGIN F64.new
 }
 
 #| Vector type.

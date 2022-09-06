@@ -62,6 +62,14 @@ if has-wasmtime() {
         }
     }
 
+    for f32(), 'f32-const', f64(), 'f64-const' -> $type, $op {
+        subtest "$op" => {
+            my $expression = Wasm::Emitter::Expression.new;
+            $expression."$op"(12.45e0);
+            test-nullary $expression, $type, '12.45';
+        }
+    }
+
     subtest 'Locals and instructions (get/set/tee)' => {
         my $emitter = Wasm::Emitter.new;
         my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));

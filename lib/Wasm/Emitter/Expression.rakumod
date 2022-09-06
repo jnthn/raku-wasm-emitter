@@ -56,6 +56,18 @@ class Wasm::Emitter::Expression {
         $!pos += encode-leb128-signed($value, $!code, $!pos);
     }
 
+    method f32-const(Num $value --> Nil) {
+        $!code.write-uint8($!pos++, 0x43);
+        $!code.write-num32($!pos, $value, Endian::LittleEndian);
+        $!pos += 4;
+    }
+
+    method f64-const(Num $value --> Nil) {
+        $!code.write-uint8($!pos++, 0x44);
+        $!code.write-num64($!pos, $value, Endian::LittleEndian);
+        $!pos += 8;
+    }
+
     method assemble(--> Buf) {
         $!code.write-uint8($!pos++, 0x0B);
         $!code

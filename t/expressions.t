@@ -70,6 +70,18 @@ if has-wasmtime() {
         }
     }
 
+    for 'f32-', 'f64-' -> $op-base {
+        for 'eq', 0, 'ne', 1, 'lt', 0, 'le', 0, 'gt', 1, 'ge', 1 -> $op, $expected {
+            subtest "$op-base$op" => {
+                my $expression = Wasm::Emitter::Expression.new;
+                $expression."{ $op-base }const"(10.9e0);
+                $expression."{ $op-base }const"(5.2e0);
+                $expression."$op-base$op"();
+                test-nullary $expression, i32(), ~$expected;
+            }
+        }
+    }
+
     subtest 'Locals and instructions (get/set/tee)' => {
         my $emitter = Wasm::Emitter.new;
         my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));

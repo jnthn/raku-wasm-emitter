@@ -68,6 +68,94 @@ class Wasm::Emitter::Expression {
         $!pos += 8;
     }
 
+    method i32-eqz(--> Nil) {
+        $!code.write-uint8($!pos++, 0x45);
+    }
+
+    method i32-eq(--> Nil) {
+        $!code.write-uint8($!pos++, 0x46);
+    }
+
+    method i32-ne(--> Nil) {
+        $!code.write-uint8($!pos++, 0x47);
+    }
+
+    method i32-lt-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0x48);
+    }
+
+    method i32-lt-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0x49);
+    }
+
+    method i32-gt-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0x4A);
+    }
+
+    method i32-gt-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0x4B);
+    }
+
+    method i32-le-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0x4C);
+    }
+
+    method i32-le-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0x4D);
+    }
+
+    method i32-ge-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0x4E);
+    }
+
+    method i32-ge-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0x4F);
+    }
+
+    method i64-eqz(--> Nil) {
+        $!code.write-uint8($!pos++, 0x50);
+    }
+
+    method i64-eq(--> Nil) {
+        $!code.write-uint8($!pos++, 0x51);
+    }
+
+    method i64-ne(--> Nil) {
+        $!code.write-uint8($!pos++, 0x52);
+    }
+
+    method i64-lt-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0x53);
+    }
+
+    method i64-lt-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0x54);
+    }
+
+    method i64-gt-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0x55);
+    }
+
+    method i64-gt-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0x56);
+    }
+
+    method i64-le-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0x57);
+    }
+
+    method i64-le-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0x58);
+    }
+
+    method i64-ge-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0x59);
+    }
+
+    method i64-ge-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0x5A);
+    }
+
     method f32-eq(--> Nil) {
         $!code.write-uint8($!pos++, 0x5B);
     }

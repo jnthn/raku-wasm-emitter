@@ -204,6 +204,30 @@ class Wasm::Emitter::Expression {
         $!code.write-uint8($!pos++, 0x66);
     }
 
+    method i32-clz(--> Nil) {
+        $!code.write-uint8($!pos++, 0x67);
+    }
+
+    method i32-ctz(--> Nil) {
+        $!code.write-uint8($!pos++, 0x68);
+    }
+
+    method i32-popcnt(--> Nil) {
+        $!code.write-uint8($!pos++, 0x69);
+    }
+
+    method i64-clz(--> Nil) {
+        $!code.write-uint8($!pos++, 0x79);
+    }
+
+    method i64-ctz(--> Nil) {
+        $!code.write-uint8($!pos++, 0x7A);
+    }
+
+    method i64-popcnt(--> Nil) {
+        $!code.write-uint8($!pos++, 0x7B);
+    }
+
     method assemble(--> Buf) {
         $!code.write-uint8($!pos++, 0x0B);
         $!code

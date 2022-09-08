@@ -103,6 +103,21 @@ if has-wasmtime() {
         }
     }
 
+    for 'clz', 5, 'ctz', 6, 'popcnt', 7 -> $op, $expected {
+        subtest "i32-$op" => {
+            my $expression = Wasm::Emitter::Expression.new;
+            $expression."i32-const"(0b0000_0100_0011_0010_0000_0011_0100_0000);
+            $expression."i32-$op"();
+            test-nullary $expression, i32(), $expected;
+        }
+        subtest "i64-$op" => {
+            my $expression = Wasm::Emitter::Expression.new;
+            $expression."i64-const"(0b0000_0100_0000_0000_0011_0000_0010_0000_0000_0000_0000_0000_0011_0000_0100_0000);
+            $expression."i64-$op"();
+            test-nullary $expression, i64(), $expected;
+        }
+    }
+
     subtest 'Locals and instructions (get/set/tee)' => {
         my $emitter = Wasm::Emitter.new;
         my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));

@@ -348,6 +348,118 @@ class Wasm::Emitter::Expression {
         $!code.write-uint8($!pos++, 0x8A);
     }
 
+    method f32-abs(--> Nil) {
+        $!code.write-uint8($!pos++, 0x8B);
+    }
+
+    method f32-neg(--> Nil) {
+        $!code.write-uint8($!pos++, 0x8C);
+    }
+
+    method f32-ceil(--> Nil) {
+        $!code.write-uint8($!pos++, 0x8D);
+    }
+
+    method f32-floor(--> Nil) {
+        $!code.write-uint8($!pos++, 0x8E);
+    }
+
+    method f32-trunc(--> Nil) {
+        $!code.write-uint8($!pos++, 0x8F);
+    }
+
+    method f32-nearest(--> Nil) {
+        $!code.write-uint8($!pos++, 0x90);
+    }
+
+    method f32-sqrt(--> Nil) {
+        $!code.write-uint8($!pos++, 0x91);
+    }
+
+    method f32-add(--> Nil) {
+        $!code.write-uint8($!pos++, 0x92);
+    }
+
+    method f32-sub(--> Nil) {
+        $!code.write-uint8($!pos++, 0x93);
+    }
+
+    method f32-mul(--> Nil) {
+        $!code.write-uint8($!pos++, 0x94);
+    }
+
+    method f32-div(--> Nil) {
+        $!code.write-uint8($!pos++, 0x95);
+    }
+
+    method f32-min(--> Nil) {
+        $!code.write-uint8($!pos++, 0x96);
+    }
+
+    method f32-max(--> Nil) {
+        $!code.write-uint8($!pos++, 0x97);
+    }
+
+    method f32-copysign(--> Nil) {
+        $!code.write-uint8($!pos++, 0x98);
+    }
+
+    method f64-abs(--> Nil) {
+        $!code.write-uint8($!pos++, 0x99);
+    }
+
+    method f64-neg(--> Nil) {
+        $!code.write-uint8($!pos++, 0x9A);
+    }
+
+    method f64-ceil(--> Nil) {
+        $!code.write-uint8($!pos++, 0x9B);
+    }
+
+    method f64-floor(--> Nil) {
+        $!code.write-uint8($!pos++, 0x9C);
+    }
+
+    method f64-trunc(--> Nil) {
+        $!code.write-uint8($!pos++, 0x9D);
+    }
+
+    method f64-nearest(--> Nil) {
+        $!code.write-uint8($!pos++, 0x9E);
+    }
+
+    method f64-sqrt(--> Nil) {
+        $!code.write-uint8($!pos++, 0x9F);
+    }
+
+    method f64-add(--> Nil) {
+        $!code.write-uint8($!pos++, 0xA0);
+    }
+
+    method f64-sub(--> Nil) {
+        $!code.write-uint8($!pos++, 0xA1);
+    }
+
+    method f64-mul(--> Nil) {
+        $!code.write-uint8($!pos++, 0xA2);
+    }
+
+    method f64-div(--> Nil) {
+        $!code.write-uint8($!pos++, 0xA3);
+    }
+
+    method f64-min(--> Nil) {
+        $!code.write-uint8($!pos++, 0xA4);
+    }
+
+    method f64-max(--> Nil) {
+        $!code.write-uint8($!pos++, 0xA5);
+    }
+
+    method f64-copysign(--> Nil) {
+        $!code.write-uint8($!pos++, 0xA6);
+    }
+
     method assemble(--> Buf) {
         $!code.write-uint8($!pos++, 0x0B);
         $!code

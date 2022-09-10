@@ -131,6 +131,42 @@ if has-wasmtime() {
         }
     }
 
+    for i32(), 'i32-', i64(), 'i64-' -> $type, $op-base {
+        for 'and', 0b0010, 'or', 0b1110, 'xor', 0b1100 -> $op, $expected {
+            subtest "$op-base$op" => {
+                my $expression = Wasm::Emitter::Expression.new;
+                $expression."{ $op-base }const"(0b1010);
+                $expression."{ $op-base }const"(0b0110);
+                $expression."$op-base$op"();
+                test-nullary $expression, $type, $expected;
+            }
+        }
+    }
+
+    for i32(), 'i32-', i64(), 'i64-' -> $type, $op-base {
+        for 'shl', 0b10101101000, 'shr-s', 0b10101, 'shr-u', 0b10101 -> $op, $expected {
+            subtest "$op-base$op" => {
+                my $expression = Wasm::Emitter::Expression.new;
+                $expression."{ $op-base }const"(0b10101101);
+                $expression."{ $op-base }const"(3);
+                $expression."$op-base$op"();
+                test-nullary $expression, $type, $expected;
+            }
+        }
+    }
+
+    for i32(), 'i32-', i64(), 'i64-' -> $type, $op-base {
+        for 'rotl', 0b1101_1000, 'rotr', 0b0011_0110  -> $op, $expected {
+            subtest "$op-base$op" => {
+                my $expression = Wasm::Emitter::Expression.new;
+                $expression."{ $op-base }const"(0b0110_1100);
+                $expression."{ $op-base }const"(1);
+                $expression."$op-base$op"();
+                test-nullary $expression, $type, $expected;
+            }
+        }
+    }
+
     subtest 'Locals and instructions (get/set/tee)' => {
         my $emitter = Wasm::Emitter.new;
         my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));

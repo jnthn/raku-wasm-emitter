@@ -244,6 +244,38 @@ class Wasm::Emitter::Expression {
         $!code.write-uint8($!pos++, 0x70);
     }
 
+    method i32-and(--> Nil) {
+        $!code.write-uint8($!pos++, 0x71);
+    }
+
+    method i32-or(--> Nil) {
+        $!code.write-uint8($!pos++, 0x72);
+    }
+
+    method i32-xor(--> Nil) {
+        $!code.write-uint8($!pos++, 0x73);
+    }
+
+    method i32-shl(--> Nil) {
+        $!code.write-uint8($!pos++, 0x74);
+    }
+
+    method i32-shr-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0x75);
+    }
+
+    method i32-shr-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0x76);
+    }
+
+    method i32-rotl(--> Nil) {
+        $!code.write-uint8($!pos++, 0x77);
+    }
+
+    method i32-rotr(--> Nil) {
+        $!code.write-uint8($!pos++, 0x78);
+    }
+
     method i64-clz(--> Nil) {
         $!code.write-uint8($!pos++, 0x79);
     }
@@ -282,6 +314,38 @@ class Wasm::Emitter::Expression {
 
     method i64-rem-u(--> Nil) {
         $!code.write-uint8($!pos++, 0x82);
+    }
+
+    method i64-and(--> Nil) {
+        $!code.write-uint8($!pos++, 0x83);
+    }
+
+    method i64-or(--> Nil) {
+        $!code.write-uint8($!pos++, 0x84);
+    }
+
+    method i64-xor(--> Nil) {
+        $!code.write-uint8($!pos++, 0x85);
+    }
+
+    method i64-shl(--> Nil) {
+        $!code.write-uint8($!pos++, 0x86);
+    }
+
+    method i64-shr-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0x87);
+    }
+
+    method i64-shr-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0x88);
+    }
+
+    method i64-rotl(--> Nil) {
+        $!code.write-uint8($!pos++, 0x89);
+    }
+
+    method i64-rotr(--> Nil) {
+        $!code.write-uint8($!pos++, 0x8A);
     }
 
     method assemble(--> Buf) {

@@ -244,6 +244,44 @@ if has-wasmtime() {
         pass 'Assembled module';
         is-function-output $buf, [], '101';
     }
+
+    subtest 'if' => {
+        my $emitter = Wasm::Emitter.new;
+        my $type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:$type-index, :1parameters, :$expression);
+        $expression.local-get(0);
+        $expression.if: {
+            $expression.i32-const(99);
+            $expression.return;
+        }
+        $expression.i32-const(100);
+        $emitter.export-function('test', $emitter.add-function($function));
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [1], '99';
+        is-function-output $buf, [0], '100';
+    }
+
+    subtest 'if' => {
+        my $emitter = Wasm::Emitter.new;
+        my $type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:$type-index, :1parameters, :$expression);
+        $expression.local-get(0);
+        $expression.if: :blocktype(i32()),
+                {
+                    $expression.i32-const(25);
+                },
+                {
+                    $expression.i32-const(75);
+                };
+        $emitter.export-function('test', $emitter.add-function($function));
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [1], '25';
+        is-function-output $buf, [0], '75';
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

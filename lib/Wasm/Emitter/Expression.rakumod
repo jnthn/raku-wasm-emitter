@@ -1,5 +1,10 @@
 use v6.d;
 use LEB128;
+use Wasm::Emitter::Types;
+
+#| A block type, if provided, is either a value type or an integer or a type object
+#| (where the type object signifies the absence of a block type).
+subset Wasm::Emitter::BlockType where Wasm::Emitter::Types::ValueType:D | Int:D | Any:U;
 
 #| Writer for a WebAssembly expression. Used to emit a sequence of instructions.
 #| Automatically adds the end marker when the expression's value is requested.
@@ -13,6 +18,34 @@ class Wasm::Emitter::Expression {
 
     method nop(--> Nil) {
         $!code.write-uint8($!pos++, 0x01);
+    }
+
+    method if(&then, &else?, Wasm::Emitter::BlockType :$blocktype --> Nil) {
+        $!code.write-uint8($!pos++, 0x04);
+        self!emit-blocktype($blocktype);
+        then();
+        with &else {
+            $!code.write-uint8($!pos++, 0x05);
+            else();
+        }
+        $!code.write-uint8($!pos++, 0x0B);
+    }
+
+    method !emit-blocktype(Wasm::Emitter::BlockType $block-type --> Nil) {
+        with $block-type {
+            when Wasm::Emitter::Types::ValueType {
+                $!pos += .emit($!code, $!pos);
+            }
+            when Int {
+                $!pos += encode-leb128-signed($_, $!code, $!pos);
+            }
+            default {
+                die "Unexpected block type {.^name}";
+            }
+        }
+        else {
+            $!code.write-uint8($!pos++, 0x40);
+        }
     }
 
     method return(--> Nil) {

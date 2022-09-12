@@ -27,6 +27,13 @@ class Wasm::Emitter::Expression {
         $!code.write-uint8($!pos++, 0x0B);
     }
 
+    method loop(&body, Wasm::Emitter::BlockType :$blocktype --> Nil) {
+        $!code.write-uint8($!pos++, 0x03);
+        self!emit-blocktype($blocktype);
+        body();
+        $!code.write-uint8($!pos++, 0x0B);
+    }
+
     method if(&then, &else?, Wasm::Emitter::BlockType :$blocktype --> Nil) {
         $!code.write-uint8($!pos++, 0x04);
         self!emit-blocktype($blocktype);

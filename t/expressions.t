@@ -318,6 +318,40 @@ if has-wasmtime() {
         is-function-output $buf, [1], '66';
         is-function-output $buf, [0], '69';
     }
+
+    subtest 'loop' => {
+        my $emitter = Wasm::Emitter.new;
+        my $type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:$type-index :1parameters, :$expression);
+        my $res = $function.declare-local(i32());
+        $expression.i32-const(1);
+        $expression.local-set($res);
+        $expression.local-get(0);
+        $expression.if: {
+            $expression.loop: {
+                $expression.local-get(0);
+                $expression.local-get($res);
+                $expression.i32-mul();
+                $expression.local-set($res);
+                $expression.local-get(0);
+                $expression.i32-const(1);
+                $expression.i32-sub();
+                $expression.local-tee(0);
+                $expression.br-if();
+            }
+        }
+        $expression.local-get($res);
+        $emitter.export-function('test', $emitter.add-function($function));
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [0], '1';
+        is-function-output $buf, [1], '1';
+        is-function-output $buf, [2], '2';
+        is-function-output $buf, [3], '6';
+        is-function-output $buf, [4], '24';
+        is-function-output $buf, [5], '120';
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

@@ -8,6 +8,9 @@ class Wasm::Emitter::Function {
     #| The index of the function type.
     has Int $.type-index is required;
 
+    #| The number of parameters.
+    has Int $.parameters = 0;
+
     #| The expression making up the function body.
     has Wasm::Emitter::Expression $.expression is required;
 
@@ -18,7 +21,7 @@ class Wasm::Emitter::Function {
     #| declared local.
     method declare-local(Wasm::Emitter::Types::ValueType $type --> Int) {
         @!locals.push($type);
-        @!locals.end
+        $!parameters + @!locals.end
     }
 
     method emit(Buf $into, uint $offset --> uint) {

@@ -210,6 +210,24 @@ if has-wasmtime() {
         pass 'Assembled module';
         is-function-output $buf, [], '99';
     }
+
+    subtest 'Parameters' => {
+        my $emitter = Wasm::Emitter.new;
+        my $type-index = $emitter.intern-function-type: functype(resulttype(i32(), i32()), resulttype(i32()));
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:$type-index, :2parameters, :$expression);
+        my $local-id = $function.declare-local(i32());
+        is $local-id, 2, 'Locals numbered from parameter count';
+        $expression.local-get(0);
+        $expression.local-get(1);
+        $expression.i32-sub();
+        $expression.local-set($local-id);
+        $expression.local-get($local-id);
+        $emitter.export-function('test', $emitter.add-function($function));
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [49, 7], '42';
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

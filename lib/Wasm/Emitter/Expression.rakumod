@@ -20,6 +20,13 @@ class Wasm::Emitter::Expression {
         $!code.write-uint8($!pos++, 0x01);
     }
 
+    method block(&body, Wasm::Emitter::BlockType :$blocktype --> Nil) {
+        $!code.write-uint8($!pos++, 0x02);
+        self!emit-blocktype($blocktype);
+        body();
+        $!code.write-uint8($!pos++, 0x0B);
+    }
+
     method if(&then, &else?, Wasm::Emitter::BlockType :$blocktype --> Nil) {
         $!code.write-uint8($!pos++, 0x04);
         self!emit-blocktype($blocktype);
@@ -46,6 +53,16 @@ class Wasm::Emitter::Expression {
         else {
             $!code.write-uint8($!pos++, 0x40);
         }
+    }
+
+    method br(Int $label-index = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x0C);
+        $!pos += encode-leb128-unsigned($label-index, $!code, $!pos);
+    }
+
+    method br-if(Int $label-index = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x0D);
+        $!pos += encode-leb128-unsigned($label-index, $!code, $!pos);
     }
 
     method return(--> Nil) {

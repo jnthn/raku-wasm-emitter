@@ -228,6 +228,22 @@ if has-wasmtime() {
         pass 'Assembled module';
         is-function-output $buf, [49, 7], '42';
     }
+
+    subtest 'nop, return, and unreachable' => {
+        my $emitter = Wasm::Emitter.new;
+        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
+        $expression.nop();
+        $expression.i32-const(101);
+        $expression.nop();
+        $expression.return();
+        $expression.unreachable();
+        $emitter.export-function('test', $emitter.add-function($function));
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [], '101';
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

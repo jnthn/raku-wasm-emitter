@@ -7,6 +7,18 @@ class Wasm::Emitter::Expression {
     has Buf $!code .= new;
     has int $!pos = 0;
 
+    method unreachable(--> Nil) {
+        $!code.write-uint8($!pos++, 0x00);
+    }
+
+    method nop(--> Nil) {
+        $!code.write-uint8($!pos++, 0x01);
+    }
+
+    method return(--> Nil) {
+        $!code.write-uint8($!pos++, 0x0F);
+    }
+
     method call(Int $function-index --> Nil) {
         $!code.write-uint8($!pos++, 0x10);
         $!pos += encode-leb128-unsigned($function-index, $!code, $!pos);

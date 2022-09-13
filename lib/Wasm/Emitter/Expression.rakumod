@@ -92,6 +92,17 @@ class Wasm::Emitter::Expression {
         $!code.write-uint8($!pos++, 0x1A);
     }
 
+    method select(Wasm::Emitter::Types::ValueType $type? --> Nil) {
+        with $type {
+            $!code.write-uint8($!pos++, 0x1C);
+            $!pos += encode-leb128-unsigned(1, $!code, $!pos);
+            $!pos += $type.emit($!code, $!pos);
+        }
+        else {
+            $!code.write-uint8($!pos++, 0x1B);
+        }
+    }
+
     method local-get(Int $local-index --> Nil) {
         $!code.write-uint8($!pos++, 0x20);
         $!pos += encode-leb128-unsigned($local-index, $!code, $!pos);

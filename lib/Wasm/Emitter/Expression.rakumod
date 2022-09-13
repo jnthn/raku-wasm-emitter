@@ -547,6 +547,50 @@ class Wasm::Emitter::Expression {
         $!code.write-uint8($!pos++, 0xA6);
     }
 
+    method i32-wrap-i64(--> Nil) {
+        $!code.write-uint8($!pos++, 0xA7);
+    }
+
+    method i32-trunc-f32-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0xA8);
+    }
+
+    method i32-trunc-f32-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0xA9);
+    }
+
+    method i32-trunc-f64-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0xAA);
+    }
+
+    method i32-trunc-f64-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0xAB);
+    }
+
+    method i64-extend-i32-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0xAC);
+    }
+
+    method i64-extend-i32-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0xAD);
+    }
+
+    method i64-trunc-f32-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0xAE);
+    }
+
+    method i64-trunc-f32-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0xAF);
+    }
+
+    method i64-trunc-f64-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0xB0);
+    }
+
+    method i64-trunc-f64-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0xB1);
+    }
+
     method assemble(--> Buf) {
         $!code.write-uint8($!pos++, 0x0B);
         $!code

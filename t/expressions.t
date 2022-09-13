@@ -19,7 +19,7 @@ sub is-function-output(Buf $wasm, @args, $expected, :$function = 'test') {
     my $exitcode = -1;
     my $output = '';
     react {
-        my $proc = Proc::Async.new('wasmtime', $temp-file, '--invoke' , $function, @args);
+        my $proc = Proc::Async.new('wasmtime', $temp-file, '--invoke' , $function, '--', @args);
         whenever $proc.stdout {
             $output ~= $_;
         }
@@ -411,6 +411,47 @@ if has-wasmtime() {
         pass 'Assembled module';
         is-function-output $buf, [0], '66';
         is-function-output $buf, [1], '55';
+    }
+
+    sub coercion-test($op, $in-type, $out-type, *@cases, :$const-ins) {
+        for @cases -> $case {
+            my $emitter = Wasm::Emitter.new;
+            my $in-resulttype = $const-ins ?? resulttype() !! resulttype($in-type);
+            my $type-index = $emitter.intern-function-type: functype($in-resulttype, resulttype($out-type));
+            my $expression = Wasm::Emitter::Expression.new;
+            my $function = Wasm::Emitter::Function.new(:$type-index :parameters($const-ins ?? 0 !! 1), :$expression);
+            if $const-ins {
+                $expression."$const-ins"($case.key);
+            }
+            else {
+                $expression.local-get(0);
+            }
+            $expression."$op"();
+            $emitter.export-function('test', $emitter.add-function($function));
+            my $buf = $emitter.assemble();
+            pass 'Assembled module';
+            is-function-output $buf, $const-ins ?? [] !! [$case.key], $case.value;
+        }
+    }
+
+    subtest 'i32.wrap_i64' => {
+        coercion-test 'i32-wrap-i64', i64(), i32(), 0xFFFFFF => 0xFFFFFF, 0xFFFFFFFF => -1;
+    }
+
+    subtest 'i64.extend_*' => {
+        coercion-test 'i64-extend-i32-s', i32(), i64(), 10 => 10, -9 => -9;
+        coercion-test 'i64-extend-i32-u', i32(), i64(), 10 => 10, -9 => 4294967287;
+    }
+
+    subtest 'i32.trunc_* and i64.trunc_*' => {
+        coercion-test 'i32-trunc-f32-s', :const-ins<f32-const>, f32(), i32(), 10.55e0 => 10, -90.2e0 => -90;
+        coercion-test 'i32-trunc-f32-u', :const-ins<f32-const>, f32(), i32(), 10.55e0 => 10;
+        coercion-test 'i32-trunc-f64-s', :const-ins<f64-const>, f64(), i32(), 10.55e0 => 10, -90.2e0 => -90;
+        coercion-test 'i32-trunc-f64-u', :const-ins<f64-const>, f64(), i32(), 10.55e0 => 10;
+        coercion-test 'i64-trunc-f32-s', :const-ins<f32-const>, f32(), i64(), 10.55e0 => 10, -90.2e0 => -90;
+        coercion-test 'i64-trunc-f32-u', :const-ins<f32-const>, f32(), i64(), 10.55e0 => 10;
+        coercion-test 'i64-trunc-f64-s', :const-ins<f64-const>, f64(), i64(), 10.55e0 => 10, -90.2e0 => -90;
+        coercion-test 'i64-trunc-f64-u', :const-ins<f64-const>, f64(), i64(), 10.55e0 => 10;
     }
 }
 else {

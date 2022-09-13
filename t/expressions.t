@@ -352,6 +352,34 @@ if has-wasmtime() {
         is-function-output $buf, [4], '24';
         is-function-output $buf, [5], '120';
     }
+
+    subtest 'br_table' => {
+        my $emitter = Wasm::Emitter.new;
+        my $type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:$type-index :1parameters, :$expression);
+        $expression.block: {
+            $expression.block: {
+                $expression.block: {
+                    $expression.local-get(0);
+                    $expression.br-table([0, 1], 2)
+                }
+                $expression.i32-const(100);
+                $expression.return();
+            }
+            $expression.i32-const(200);
+            $expression.return();
+        }
+        $expression.i32-const(300);
+        $emitter.export-function('test', $emitter.add-function($function));
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [0], '100';
+        is-function-output $buf, [1], '200';
+        is-function-output $buf, [2], '300';
+        is-function-output $buf, [3], '300';
+        is-function-output $buf, [4], '300';
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

@@ -72,6 +72,13 @@ class Wasm::Emitter::Expression {
         $!pos += encode-leb128-unsigned($label-index, $!code, $!pos);
     }
 
+    method br-table(@cases, Int $default --> Nil) {
+        $!code.write-uint8($!pos++, 0x0E);
+        $!pos += encode-leb128-unsigned(@cases.elems, $!code, $!pos);
+        $!pos += encode-leb128-unsigned($_, $!code, $!pos) for @cases;
+        $!pos += encode-leb128-unsigned($default, $!code, $!pos)
+    }
+
     method return(--> Nil) {
         $!code.write-uint8($!pos++, 0x0F);
     }

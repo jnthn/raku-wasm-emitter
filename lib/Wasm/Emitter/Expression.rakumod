@@ -631,6 +631,22 @@ class Wasm::Emitter::Expression {
         $!code.write-uint8($!pos++, 0xBB);
     }
 
+    method i32-reinterpret-f32(--> Nil) {
+        $!code.write-uint8($!pos++, 0xBC);
+    }
+
+    method i64-reinterpret-f64(--> Nil) {
+        $!code.write-uint8($!pos++, 0xBD);
+    }
+
+    method f32-reinterpret-i32(--> Nil) {
+        $!code.write-uint8($!pos++, 0xBE);
+    }
+
+    method f64-reinterpret-i64(--> Nil) {
+        $!code.write-uint8($!pos++, 0xBF);
+    }
+
     method assemble(--> Buf) {
         $!code.write-uint8($!pos++, 0x0B);
         $!code

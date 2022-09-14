@@ -471,6 +471,15 @@ if has-wasmtime() {
         coercion-test 'f64-promote-f32', :const-ins<f32-const>, f32(), f64(),
                 -42e0 => -42, 18446744000000000000e0 => 18446744073709552000;
     }
+
+    subtest '*.reinterpret_* instructions' => {
+        coercion-test 'i32-reinterpret-f32', :const-ins<f32-const>, f32(), i32(),
+                42.5e0 => 1110048768;
+        coercion-test 'i64-reinterpret-f64', :const-ins<f64-const>, f64(), i64(),
+                42.5e0 => 4631178160564600832;
+        coercion-test 'f32-reinterpret-i32', i32(), f32(), 1110048768 => 42.5;
+        coercion-test 'f64-reinterpret-i64', i64(), f64(), 4631178160564600832 => 42.5;
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

@@ -591,6 +591,46 @@ class Wasm::Emitter::Expression {
         $!code.write-uint8($!pos++, 0xB1);
     }
 
+    method f32-convert-i32-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0xB2);
+    }
+
+    method f32-convert-i32-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0xB3);
+    }
+
+    method f32-convert-i64-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0xB4);
+    }
+
+    method f32-convert-i64-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0xB5);
+    }
+
+    method f32-demote-f64(--> Nil) {
+        $!code.write-uint8($!pos++, 0xB6);
+    }
+
+    method f64-convert-i32-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0xB7);
+    }
+
+    method f64-convert-i32-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0xB8);
+    }
+
+    method f64-convert-i64-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0xB9);
+    }
+
+    method f64-convert-i64-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0xBA);
+    }
+
+    method f64-promote-f32(--> Nil) {
+        $!code.write-uint8($!pos++, 0xBB);
+    }
+
     method assemble(--> Buf) {
         $!code.write-uint8($!pos++, 0x0B);
         $!code

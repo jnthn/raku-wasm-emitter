@@ -453,6 +453,24 @@ if has-wasmtime() {
         coercion-test 'i64-trunc-f64-s', :const-ins<f64-const>, f64(), i64(), 10.55e0 => 10, -90.2e0 => -90;
         coercion-test 'i64-trunc-f64-u', :const-ins<f64-const>, f64(), i64(), 10.55e0 => 10;
     }
+
+    subtest 'f32.convert_* and f64.convert_*' => {
+        coercion-test 'f32-convert-i32-s', i32(), f32(), 64 => 64, -4 => -4;
+        coercion-test 'f32-convert-i32-u', i32(), f32(), 64 => 64, -4 => 4294967300;
+        coercion-test 'f32-convert-i64-s', i64(), f32(), 64 => 64, -4 => -4;
+        coercion-test 'f32-convert-i64-u', i64(), f32(), 64 => 64, -4 => 18446744000000000000;
+        coercion-test 'f64-convert-i32-s', i32(), f64(), 64 => 64, -4 => -4;
+        coercion-test 'f64-convert-i32-u', i32(), f64(), 64 => 64, -4 => 4294967292;
+        coercion-test 'f64-convert-i64-s', i64(), f64(), 64 => 64, -4 => -4;
+        coercion-test 'f64-convert-i64-u', i64(), f64(), 64 => 64, -4 => 18446744073709552000;
+    }
+
+    subtest 'f32.demote_f64 and f64.promote_f32' => {
+        coercion-test 'f32-demote-f64', :const-ins<f64-const>, f64(), f32(),
+                -42e0 => -42, 18446744073709552000e0 => 18446744000000000000;
+        coercion-test 'f64-promote-f32', :const-ins<f32-const>, f32(), f64(),
+                -42e0 => -42, 18446744000000000000e0 => 18446744073709552000;
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

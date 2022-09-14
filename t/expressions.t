@@ -480,6 +480,14 @@ if has-wasmtime() {
         coercion-test 'f32-reinterpret-i32', i32(), f32(), 1110048768 => 42.5;
         coercion-test 'f64-reinterpret-i64', i64(), f64(), 4631178160564600832 => 42.5;
     }
+
+    subtest '*.extend8_s, *.extend16_s, and i64.extend32_s' => {
+        coercion-test 'i32-extend8-s', i32(), i32(), 0xFF => -1;
+        coercion-test 'i32-extend16-s', i32(), i32(), 0xFFFF => -1;
+        coercion-test 'i64-extend8-s', i64(), i64(), 0xFF => -1;
+        coercion-test 'i64-extend16-s', i64(), i64(), 0xFFFF => -1;
+        coercion-test 'i64-extend32-s', i64(), i64(), 0xFFFFFFFF => -1;
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

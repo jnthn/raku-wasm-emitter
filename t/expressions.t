@@ -488,6 +488,25 @@ if has-wasmtime() {
         coercion-test 'i64-extend16-s', i64(), i64(), 0xFFFF => -1;
         coercion-test 'i64-extend32-s', i64(), i64(), 0xFFFFFFFF => -1;
     }
+
+    subtest 'i32.trunc_* and i64.trunc_*' => {
+        coercion-test 'i32-trunc-sat-f32-s', :const-ins<f32-const>, f32(), i32(),
+                10.55e0 => 10, -90.2e0 => -90, 0xFFFFFFFFFF.Num => 0x7FFFFFFF;
+        coercion-test 'i32-trunc-sat-f32-u', :const-ins<f32-const>, f32(), i32(),
+                10.55e0 => 10, -90.2e0 => 0, 0xFFFFFFFFFF.Num => -1; # Output treated as signed by printer
+        coercion-test 'i32-trunc-sat-f64-s', :const-ins<f64-const>, f64(), i32(),
+                10.55e0 => 10, -90.2e0 => -90, 0xFFFFFFFFFF.Num => 0x7FFFFFFF;
+        coercion-test 'i32-trunc-sat-f64-u', :const-ins<f64-const>, f64(), i32(),
+                10.55e0 => 10, -90.2e0 => 0, 0xFFFFFFFFFF.Num => -1; # Output treated as signed by printer
+        coercion-test 'i64-trunc-sat-f32-s', :const-ins<f32-const>, f32(), i64(),
+                10.55e0 => 10, -90.2e0 => -90, 0xFFFFFFFFFFFFFFFFFF.Num => 0x7FFFFFFFFFFFFFFF;
+        coercion-test 'i64-trunc-sat-f32-u', :const-ins<f32-const>, f32(), i64(),
+                10.55e0 => 10, -90.2e0 => 0, 0xFFFFFFFFFFFFFFFFFF.Num => -1;  # Output treated as signed by printer
+        coercion-test 'i64-trunc-sat-f64-s', :const-ins<f64-const>, f64(), i64(),
+                10.55e0 => 10, -90.2e0 => -90, 0xFFFFFFFFFFFFFFFFFF.Num => 0x7FFFFFFFFFFFFFFF;
+        coercion-test 'i64-trunc-sat-f64-u', :const-ins<f64-const>, f64(), i64(),
+                10.55e0 => 10, -90.2e0 => 0, 0xFFFFFFFFFFFFFFFFFF.Num => -1;  # Output treated as signed by printer
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

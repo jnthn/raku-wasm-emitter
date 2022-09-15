@@ -667,6 +667,46 @@ class Wasm::Emitter::Expression {
         $!code.write-uint8($!pos++, 0xC4);
     }
 
+    method i32-trunc-sat-f32-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0xFC);
+        $!pos += encode-leb128-unsigned(0, $!code, $!pos);
+    }
+
+    method i32-trunc-sat-f32-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0xFC);
+        $!pos += encode-leb128-unsigned(1, $!code, $!pos);
+    }
+
+    method i32-trunc-sat-f64-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0xFC);
+        $!pos += encode-leb128-unsigned(2, $!code, $!pos);
+    }
+
+    method i32-trunc-sat-f64-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0xFC);
+        $!pos += encode-leb128-unsigned(3, $!code, $!pos);
+    }
+
+    method i64-trunc-sat-f32-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0xFC);
+        $!pos += encode-leb128-unsigned(4, $!code, $!pos);
+    }
+
+    method i64-trunc-sat-f32-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0xFC);
+        $!pos += encode-leb128-unsigned(5, $!code, $!pos);
+    }
+
+    method i64-trunc-sat-f64-s(--> Nil) {
+        $!code.write-uint8($!pos++, 0xFC);
+        $!pos += encode-leb128-unsigned(6, $!code, $!pos);
+    }
+
+    method i64-trunc-sat-f64-u(--> Nil) {
+        $!code.write-uint8($!pos++, 0xFC);
+        $!pos += encode-leb128-unsigned(7, $!code, $!pos);
+    }
+
     method assemble(--> Buf) {
         $!code.write-uint8($!pos++, 0x0B);
         $!code

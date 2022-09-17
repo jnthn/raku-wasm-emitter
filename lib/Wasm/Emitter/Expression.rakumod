@@ -118,6 +118,76 @@ class Wasm::Emitter::Expression {
         $!pos += encode-leb128-unsigned($local-index, $!code, $!pos);
     }
 
+    method i32-load(Int :$align = 2, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x28);
+        self!mem-arg($align, $offset);
+    }
+
+    method i64-load(Int :$align = 2, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x29);
+        self!mem-arg($align, $offset);
+    }
+
+    method f32-load(Int :$align = 2, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x2A);
+        self!mem-arg($align, $offset);
+    }
+
+    method f64-load(Int :$align = 2, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x2B);
+        self!mem-arg($align, $offset);
+    }
+
+    method i32-load8-s(Int :$align = 0, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x2C);
+        self!mem-arg($align, $offset);
+    }
+
+    method i32-load8-u(Int :$align = 0, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x2D);
+        self!mem-arg($align, $offset);
+    }
+
+    method i32-load16-s(Int :$align = 1, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x2E);
+        self!mem-arg($align, $offset);
+    }
+
+    method i32-load16-u(Int :$align = 1, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x2F);
+        self!mem-arg($align, $offset);
+    }
+
+    method i64-load8-s(Int :$align = 0, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x30);
+        self!mem-arg($align, $offset);
+    }
+
+    method i64-load8-u(Int :$align = 0, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x31);
+        self!mem-arg($align, $offset);
+    }
+
+    method i64-load16-s(Int :$align = 1, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x32);
+        self!mem-arg($align, $offset);
+    }
+
+    method i64-load16-u(Int :$align = 1, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x33);
+        self!mem-arg($align, $offset);
+    }
+
+    method i64-load32-s(Int :$align = 2, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x34);
+        self!mem-arg($align, $offset);
+    }
+
+    method i64-load32-u(Int :$align = 2, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x35);
+        self!mem-arg($align, $offset);
+    }
+
     method i32-store(Int :$align = 2, Int :$offset = 0 --> Nil) {
         $!code.write-uint8($!pos++, 0x36);
         self!mem-arg($align, $offset);
@@ -125,6 +195,41 @@ class Wasm::Emitter::Expression {
 
     method i64-store(Int :$align = 2, Int :$offset = 0 --> Nil) {
         $!code.write-uint8($!pos++, 0x37);
+        self!mem-arg($align, $offset);
+    }
+
+    method f32-store(Int :$align = 2, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x38);
+        self!mem-arg($align, $offset);
+    }
+
+    method f64-store(Int :$align = 2, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x39);
+        self!mem-arg($align, $offset);
+    }
+
+    method i32-store8(Int :$align = 0, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x3A);
+        self!mem-arg($align, $offset);
+    }
+
+    method i32-store16(Int :$align = 1, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x3B);
+        self!mem-arg($align, $offset);
+    }
+
+    method i64-store8(Int :$align = 0, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x3C);
+        self!mem-arg($align, $offset);
+    }
+
+    method i64-store16(Int :$align = 1, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x3D);
+        self!mem-arg($align, $offset);
+    }
+
+    method i64-store32(Int :$align = 2, Int :$offset = 0 --> Nil) {
+        $!code.write-uint8($!pos++, 0x3E);
         self!mem-arg($align, $offset);
     }
 

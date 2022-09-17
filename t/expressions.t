@@ -507,6 +507,102 @@ if has-wasmtime() {
         coercion-test 'i64-trunc-sat-f64-u', :const-ins<f64-const>, f64(), i64(),
                 10.55e0 => 10, -90.2e0 => 0, 0xFFFFFFFFFFFFFFFFFF.Num => -1;  # Output treated as signed by printer
     }
+
+
+    for 'i32-', i32(), 'i64-', i64(), 'f32-', f32(), 'f64-', f64() -> $prefix, $type {
+        subtest "{$prefix}load and {$prefix}store" => {
+            my $emitter = Wasm::Emitter.new;
+            $emitter.add-memory(limitstype(1));
+            my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype($type));
+            my $expression = Wasm::Emitter::Expression.new;
+            my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
+            $expression.i32-const(8);
+            $expression."{$prefix}const"($prefix.starts-with('i') ?? 42 !! 42e0);
+            $expression."{$prefix}store"();
+            $expression.i32-const(8);
+            $expression."{$prefix}load"();
+            $emitter.export-function('test', $emitter.add-function($function));
+            my $buf = $emitter.assemble();
+            pass 'Assembled module';
+            is-function-output $buf, [], 42;
+        }
+    }
+
+    for '8-s', -1, '8-u', 255, '16-s', -1, '16-u', 65535 -> $suffix, $expected {
+        subtest "i32.load$suffix" => {
+            my $emitter = Wasm::Emitter.new;
+            $emitter.add-memory(limitstype(1));
+            my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+            my $expression = Wasm::Emitter::Expression.new;
+            my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
+            $expression.i32-const(4);
+            $expression.i32-const(0xFFFFFF);
+            $expression.i32-store();
+            $expression.i32-const(4);
+            $expression."i32-load$suffix"();
+            $emitter.export-function('test', $emitter.add-function($function));
+            my $buf = $emitter.assemble();
+            pass 'Assembled module';
+            is-function-output $buf, [], $expected;
+        }
+    }
+
+    for '8-s', -1, '8-u', 255, '16-s', -1, '16-u', 65535, '32-s', -1, '32-u', 4294967295 -> $suffix, $expected {
+        subtest "i64.load$suffix" => {
+            my $emitter = Wasm::Emitter.new;
+            $emitter.add-memory(limitstype(1));
+            my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i64()));
+            my $expression = Wasm::Emitter::Expression.new;
+            my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
+            $expression.i32-const(4);
+            $expression.i64-const(0xFFFFFFFFFF);
+            $expression.i64-store();
+            $expression.i32-const(4);
+            $expression."i64-load$suffix"();
+            $emitter.export-function('test', $emitter.add-function($function));
+            my $buf = $emitter.assemble();
+            pass 'Assembled module';
+            is-function-output $buf, [], $expected;
+        }
+    }
+
+    for '8', 0x0000FF00, '16', 0x00FFFF00 -> $suffix, $expected {
+        subtest "i32.store$suffix" => {
+            my $emitter = Wasm::Emitter.new;
+            $emitter.add-memory(limitstype(1));
+            my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+            my $expression = Wasm::Emitter::Expression.new;
+            my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
+            $expression.i32-const(1);
+            $expression.i32-const(0xFFFFFF);
+            $expression."i32-store$suffix"(:0align);
+            $expression.i32-const(0);
+            $expression.i32-load();
+            $emitter.export-function('test', $emitter.add-function($function));
+            my $buf = $emitter.assemble();
+            pass 'Assembled module';
+            is-function-output $buf, [], $expected;
+        }
+    }
+
+    for '8', 0x00000000_0000FF00, '16', 0x00000000_00FFFF00, '32', 0x000000FF_FFFFFF00 -> $suffix, $expected {
+        subtest "i64.store$suffix" => {
+            my $emitter = Wasm::Emitter.new;
+            $emitter.add-memory(limitstype(1));
+            my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i64()));
+            my $expression = Wasm::Emitter::Expression.new;
+            my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
+            $expression.i32-const(1);
+            $expression.i64-const(0xFFFFFFFFFF);
+            $expression."i64-store$suffix"(:0align);
+            $expression.i32-const(0);
+            $expression.i64-load();
+            $emitter.export-function('test', $emitter.add-function($function));
+            my $buf = $emitter.assemble();
+            pass 'Assembled module';
+            is-function-output $buf, [], $expected;
+        }
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

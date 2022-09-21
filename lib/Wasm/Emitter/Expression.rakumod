@@ -238,6 +238,16 @@ class Wasm::Emitter::Expression {
         $!pos += encode-leb128-unsigned($offset, $!code, $!pos);
     }
 
+    method memory-size(--> Nil) {
+        $!code.write-uint8($!pos++, 0x3F);
+        $!code.write-uint8($!pos++, 0x00);
+    }
+
+    method memory-grow(--> Nil) {
+        $!code.write-uint8($!pos++, 0x40);
+        $!code.write-uint8($!pos++, 0x00);
+    }
+
     method i32-const(Int $value --> Nil) {
         $!code.write-uint8($!pos++, 0x41);
         $!pos += encode-leb128-signed($value, $!code, $!pos);

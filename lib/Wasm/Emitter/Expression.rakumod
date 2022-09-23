@@ -248,6 +248,19 @@ class Wasm::Emitter::Expression {
         $!code.write-uint8($!pos++, 0x00);
     }
 
+    method memory-init(Int $data-idx --> Nil) {
+        $!code.write-uint8($!pos++, 0xFC);
+        $!pos += encode-leb128-unsigned(8, $!code, $!pos);
+        $!pos += encode-leb128-unsigned($data-idx, $!code, $!pos);
+        $!code.write-uint8($!pos++, 0x00);
+    }
+
+    method data-drop(Int $data-idx --> Nil) {
+        $!code.write-uint8($!pos++, 0xFC);
+        $!pos += encode-leb128-unsigned(9, $!code, $!pos);
+        $!pos += encode-leb128-unsigned($data-idx, $!code, $!pos);
+    }
+
     method memory-copy(--> Nil) {
         $!code.write-uint8($!pos++, 0xFC);
         $!pos += encode-leb128-unsigned(10, $!code, $!pos);

@@ -4,6 +4,7 @@ use Wasm::Emitter::Data;
 use Wasm::Emitter::Exports;
 use Wasm::Emitter::Expression;
 use Wasm::Emitter::Function;
+use Wasm::Emitter::Global;
 use Wasm::Emitter::Imports;
 use Wasm::Emitter::Types;
 
@@ -25,6 +26,9 @@ class Wasm::Emitter {
 
     #| Declared data sections.
     has Wasm::Emitter::Data @!data;
+
+    #| Declared globals.
+    has Wasm::Emitter::Global @!globals;
 
     #| Declared functions.
     has Wasm::Emitter::Function @!functions;
@@ -83,6 +87,12 @@ class Wasm::Emitter {
         @!data.end
     }
 
+    #| Declare a global.
+    method global(Wasm::Emitter::Types::GlobalType $type, Wasm::Emitter::Expression $init --> Int) {
+        @!globals.push: Wasm::Emitter::Global.new(:$type, :$init);
+        @!globals.end
+    }
+
     #| Declare a function.
     method add-function(Wasm::Emitter::Function $function --> Int) {
         @!functions.push($function);
@@ -126,6 +136,13 @@ class Wasm::Emitter {
             $pos += encode-leb128-unsigned($memory-section.elems, $output, $pos);
             $output.append($memory-section);
             $pos += $memory-section.elems;
+        }
+        if @!globals {
+            my $global-section = self!assemble-global-section();
+            $output.write-uint8($pos++, 6);
+            $pos += encode-leb128-unsigned($global-section.elems, $output, $pos);
+            $output.append($global-section);
+            $pos += $global-section.elems;
         }
         if @!exports {
             my $export = self!assemble-export-section();
@@ -186,6 +203,10 @@ class Wasm::Emitter {
 
     method !assemble-memory-section(--> Buf) {
         assemble-simple-section(@!memories)
+    }
+
+    method !assemble-global-section(--> Buf) {
+        assemble-simple-section(@!globals)
     }
 
     method !assemble-export-section(--> Buf) {

@@ -157,6 +157,24 @@ sub functype(ResultType $in, ResultType $out) is export {
     FunctionType.new(:$in, :$out)
 }
 
+#| A global type.
+class GlobalType does Type {
+    has ValueType $.value-type is required;
+    has Bool $.mutable is required;
+
+    method emit(Buf $into, uint $offset --> uint) {
+        my int $pos = $offset;
+        $pos += $!value-type.emit($into, $pos);
+        $into.write-uint8($pos++, $!mutable ?? 1 !! 0);
+        $pos - $offset
+    }
+}
+
+#| Create a global type.
+sub globaltype(ValueType $value-type, Bool :$mutable = False) is export {
+    GlobalType.new(:$value-type, :$mutable)
+}
+
 #| A limits type.
 class LimitType does Type {
     has Int $.min is required;

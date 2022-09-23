@@ -632,6 +632,28 @@ if has-wasmtime() {
         pass 'Assembled module';
         is-function-output $buf, [], 6;
     }
+
+    subtest 'memory.fill, memory.copy' => {
+        my $emitter = Wasm::Emitter.new;
+        $emitter.add-memory(limitstype(1));
+        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i64()));
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
+        $expression.i32-const(1);
+        $expression.i32-const(0xFF);
+        $expression.i32-const(2);
+        $expression.memory-fill();
+        $expression.i32-const(4);
+        $expression.i32-const(0);
+        $expression.i32-const(4);
+        $expression.memory-copy();
+        $expression.i32-const(0);
+        $expression.i64-load();
+        $emitter.export-function('test', $emitter.add-function($function));
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [], 0x00FFFF00_00FFFF00;
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

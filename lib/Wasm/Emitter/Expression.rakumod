@@ -11,6 +11,7 @@ subset Wasm::Emitter::BlockType where Wasm::Emitter::Types::ValueType:D | Int:D 
 class Wasm::Emitter::Expression {
     has Buf $!code .= new;
     has int $!pos = 0;
+    has Bool $!assembled = False;
 
     method unreachable(--> Nil) {
         $!code.write-uint8($!pos++, 0x00);
@@ -849,7 +850,10 @@ class Wasm::Emitter::Expression {
     }
 
     method assemble(--> Buf) {
-        $!code.write-uint8($!pos++, 0x0B);
+        unless $!assembled {
+            $!code.write-uint8($!pos++, 0x0B);
+            $!assembled = True;
+        }
         $!code
     }
 }

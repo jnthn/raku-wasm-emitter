@@ -119,6 +119,16 @@ class Wasm::Emitter::Expression {
         $!pos += encode-leb128-unsigned($local-index, $!code, $!pos);
     }
 
+    method global-get(Int $global-idx --> Nil) {
+        $!code.write-uint8($!pos++, 0x23);
+        $!pos += encode-leb128-unsigned($global-idx, $!code, $!pos);
+    }
+
+    method global-set(Int $global-idx --> Nil) {
+        $!code.write-uint8($!pos++, 0x24);
+        $!pos += encode-leb128-unsigned($global-idx, $!code, $!pos);
+    }
+
     method i32-load(Int :$align = 2, Int :$offset = 0 --> Nil) {
         $!code.write-uint8($!pos++, 0x28);
         self!mem-arg($align, $offset);

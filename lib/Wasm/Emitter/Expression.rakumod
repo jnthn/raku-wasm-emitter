@@ -89,6 +89,20 @@ class Wasm::Emitter::Expression {
         $!pos += encode-leb128-unsigned($function-index, $!code, $!pos);
     }
 
+    method ref-null(Wasm::Emitter::Types::ReferenceType $type --> Nil) {
+        $!code.write-uint8($!pos++, 0xD0);
+        $!pos += $type.emit($!code, $!pos);
+    }
+
+    method ref-is-null(--> Nil) {
+        $!code.write-uint8($!pos++, 0xD1);
+    }
+
+    method ref-func(Int $function-index --> Nil) {
+        $!code.write-uint8($!pos++, 0xD2);
+        $!pos += encode-leb128-unsigned($function-index, $!code, $!pos);
+    }
+
     method drop(--> Nil) {
         $!code.write-uint8($!pos++, 0x1A);
     }

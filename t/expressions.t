@@ -693,6 +693,33 @@ if has-wasmtime() {
         pass 'Assembled module';
         is-function-output $buf, [], 2 * 3;
     }
+
+    subtest 'ref.null and ref.is_null' => {
+        my $emitter = Wasm::Emitter.new;
+        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
+        $expression.ref-null(funcref());
+        $expression.ref-is-null();
+        $emitter.export-function('test', $emitter.add-function($function));
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [], 1;
+    }
+
+    subtest 'ref.func and ref.is_null' => {
+        my $emitter = Wasm::Emitter.new;
+        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
+        my $func-idx = $emitter.add-function($function);
+        $expression.ref-func($func-idx);
+        $expression.ref-is-null();
+        $emitter.export-function('test', $func-idx);
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [], 0;
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

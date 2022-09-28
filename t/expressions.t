@@ -754,6 +754,25 @@ if has-wasmtime() {
         pass 'Assembled module';
         is-function-output $buf, [], 0;
     }
+
+    subtest 'table.size and table.grow' => {
+        my $emitter = Wasm::Emitter.new;
+        my $table-idx = $emitter.table(tabletype(limitstype(8), externref()));
+        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
+        $expression.table-size($table-idx);
+        $expression.ref-null(externref());
+        $expression.i32-const(4);
+        $expression.table-grow($table-idx);
+        $expression.drop();
+        $expression.table-size($table-idx);
+        $expression.i32-add();
+        $emitter.export-function('test', $emitter.add-function($function));
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [], 8 + 12;
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

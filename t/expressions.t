@@ -773,6 +773,31 @@ if has-wasmtime() {
         pass 'Assembled module';
         is-function-output $buf, [], 8 + 12;
     }
+
+    subtest 'table.fill and table.copy' => {
+        my $emitter = Wasm::Emitter.new;
+        my $table-idx-a = $emitter.table(tabletype(limitstype(8), funcref()));
+        my $table-idx-b = $emitter.table(tabletype(limitstype(8), funcref()));
+        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
+        my $func-idx = $emitter.add-function($function);
+        $expression.i32-const(0);
+        $expression.ref-func($func-idx);
+        $expression.i32-const(4);
+        $expression.table-fill($table-idx-a);
+        $expression.i32-const(2);
+        $expression.i32-const(0);
+        $expression.i32-const(4);
+        $expression.table-copy($table-idx-b, $table-idx-a);
+        $expression.i32-const(5);
+        $expression.table-get($table-idx-b);
+        $expression.ref-is-null();
+        $emitter.export-function('test', $func-idx);
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [], 0;
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

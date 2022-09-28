@@ -720,6 +720,40 @@ if has-wasmtime() {
         pass 'Assembled module';
         is-function-output $buf, [], 0;
     }
+
+    subtest 'table.get' => {
+        my $emitter = Wasm::Emitter.new;
+        my $table-idx = $emitter.table(tabletype(limitstype(8), externref()));
+        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
+        $expression.i32-const(0);
+        $expression.table-get($table-idx);
+        $expression.ref-is-null();
+        $emitter.export-function('test', $emitter.add-function($function));
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [], 1;
+    }
+
+    subtest 'table.set' => {
+        my $emitter = Wasm::Emitter.new;
+        my $table-idx = $emitter.table(tabletype(limitstype(8), funcref()));
+        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
+        my $func-idx = $emitter.add-function($function);
+        $expression.i32-const(0);
+        $expression.ref-func($func-idx);
+        $expression.table-set($table-idx);
+        $expression.i32-const(0);
+        $expression.table-get($table-idx);
+        $expression.ref-is-null();
+        $emitter.export-function('test', $func-idx);
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [], 0;
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

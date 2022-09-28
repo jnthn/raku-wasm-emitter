@@ -143,6 +143,16 @@ class Wasm::Emitter::Expression {
         $!pos += encode-leb128-unsigned($global-idx, $!code, $!pos);
     }
 
+    method table-get(Int $table-idx --> Nil) {
+        $!code.write-uint8($!pos++, 0x25);
+        $!pos += encode-leb128-unsigned($table-idx, $!code, $!pos);
+    }
+
+    method table-set(Int $table-idx --> Nil) {
+        $!code.write-uint8($!pos++, 0x26);
+        $!pos += encode-leb128-unsigned($table-idx, $!code, $!pos);
+    }
+
     method i32-load(Int :$align = 2, Int :$offset = 0 --> Nil) {
         $!code.write-uint8($!pos++, 0x28);
         self!mem-arg($align, $offset);

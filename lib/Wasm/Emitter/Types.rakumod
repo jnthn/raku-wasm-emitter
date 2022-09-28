@@ -204,3 +204,21 @@ multi sub limitstype(Int $min) is export {
 multi sub limitstype(Int $min, Int $max) is export {
     LimitType.new(:$min, :$max)
 }
+
+#| A table type.
+class TableType does Type {
+    has LimitType $.limits is required;
+    has ReferenceType $.reference-type is required;
+
+    method emit(Buf $into, uint $offset --> uint) {
+        my int $pos = $offset;
+        $pos += $!reference-type.emit($into, $pos);
+        $pos += $!limits.emit($into, $pos);
+        $pos - $offset
+    }
+}
+
+#| Creates a table type with the specified limits and reference type.
+sub tabletype(LimitType $limits, ReferenceType $reference-type) is export {
+    TableType.new(:$limits, :$reference-type)
+}

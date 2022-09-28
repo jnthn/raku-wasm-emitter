@@ -144,6 +144,18 @@ if has-wasmtime() {
         pass 'Assembled module with some globals';
         is-wasm-accepted $buf;
     }
+
+    subtest 'Declare tables' => {
+        my $emitter = Wasm::Emitter.new;
+        is $emitter.table(tabletype(limitstype(8, 8), funcref())), 0,
+            'First table got expected index';
+        is $emitter.table(tabletype(limitstype(8), externref())), 1,
+                'Second table got expected index';
+
+        my $buf = $emitter.assemble();
+        pass 'Assembled module with some tables';
+        is-wasm-accepted $buf;
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

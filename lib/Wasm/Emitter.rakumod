@@ -18,6 +18,9 @@ class Wasm::Emitter {
     #| Function imports.
     has Wasm::Emitter::FunctionImport @!function-imports;
 
+    #| Declared tables, with their table types.
+    has Wasm::Emitter::Types::TableType @!tables;
+
     #| Declared memories, with their limits.
     has Wasm::Emitter::Types::LimitType @!memories;
 
@@ -51,6 +54,12 @@ class Wasm::Emitter {
         }
         @!function-imports.push: Wasm::Emitter::FunctionImport.new(:$module, :$name, :$type-index);
         @!function-imports.end
+    }
+
+    #| Declare a table.
+    method table(Wasm::Emitter::Types::TableType $table-type --> Int) {
+        @!tables.push($table-type);
+        @!tables.end
     }
 
     #| Add a declaration of a memory.
@@ -130,6 +139,13 @@ class Wasm::Emitter {
             $output.append($func-section);
             $pos += $func-section.elems;
         }
+        if @!tables {
+            my $table-section = self!assemble-table-section();
+            $output.write-uint8($pos++, 4);
+            $pos += encode-leb128-unsigned($table-section.elems, $output, $pos);
+            $output.append($table-section);
+            $pos += $table-section.elems;
+        }
         if @!memories {
             my $memory-section = self!assemble-memory-section();
             $output.write-uint8($pos++, 5);
@@ -199,6 +215,10 @@ class Wasm::Emitter {
             $pos += encode-leb128-unsigned(.type-index, $output, $pos);
         }
         return $output;
+    }
+
+    method !assemble-table-section(--> Buf) {
+        assemble-simple-section(@!tables)
     }
 
     method !assemble-memory-section(--> Buf) {

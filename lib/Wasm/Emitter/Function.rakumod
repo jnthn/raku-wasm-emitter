@@ -31,7 +31,9 @@ class Wasm::Emitter::Function {
         my $size = $locals.elems + $code-expr.elems;
         $pos += encode-leb128-unsigned($size, $into, $pos);
         $into.append($locals);
+        $pos += $locals.elems;
         $into.append($code-expr);
+        $pos += $code-expr.elems;
         $pos - $offset
     }
 

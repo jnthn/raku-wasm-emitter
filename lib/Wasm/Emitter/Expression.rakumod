@@ -89,6 +89,12 @@ class Wasm::Emitter::Expression {
         $!pos += encode-leb128-unsigned($function-index, $!code, $!pos);
     }
 
+    method call-indirect(Int $type-index, Int $table-index --> Nil) {
+        $!code.write-uint8($!pos++, 0x11);
+        $!pos += encode-leb128-unsigned($type-index, $!code, $!pos);
+        $!pos += encode-leb128-unsigned($table-index, $!code, $!pos);
+    }
+
     method ref-null(Wasm::Emitter::Types::ReferenceType $type --> Nil) {
         $!code.write-uint8($!pos++, 0xD0);
         $!pos += $type.emit($!code, $!pos);

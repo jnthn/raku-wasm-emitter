@@ -921,4 +921,19 @@ class Wasm::Emitter::Expression {
         }
         $!code
     }
+
+    #| If the expression does no more than load constant function reference,
+    #| then return it. Otherwise, return a type object.
+    method get-constant-func-ref(--> Int) {
+        if $!code[0] == 0xD2 {
+            my int $pos = 1;
+            my int $read;
+            my $index = decode-leb128-unsigned($!code, $pos, $read);
+            $pos += $read;
+            if $pos == $!code.elems || $pos + 1 == $!code.elems && $!code[*-1] == 0x0B {
+                return $index;
+            }
+        }
+        return Int;
+    }
 }

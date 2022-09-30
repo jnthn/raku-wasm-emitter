@@ -24,15 +24,38 @@ role Elements {
         }
         $pos - $offset
     }
+
+    method !constant-func-ref-indexes() {
+        my @indices;
+        for @!init {
+            with .get-constant-func-ref {
+                @indices.push($_);
+            }
+            else {
+                return Nil;
+            }
+        }
+        @indices
+    }
 }
 
 #| A declarative elements segment.
 class Elements::Declarative does Elements {
     method emit(Buf $into, uint $offset --> uint) {
         my int $pos = $offset;
-        $pos += encode-leb128-unsigned(7, $into, $pos);
-        $pos += $!type.emit($into, $pos);
-        $pos += self!emit-init($into, $pos);
+        with self!constant-func-ref-indexes() -> @indices {
+            $pos += encode-leb128-unsigned(3, $into, $pos);
+            $pos += encode-leb128-unsigned(0, $into, $pos);
+            $pos += encode-leb128-unsigned(@indices.elems, $into, $pos);
+            for @indices {
+                $pos += encode-leb128-unsigned($_, $into, $pos);
+            }
+        }
+        else {
+            $pos += encode-leb128-unsigned(7, $into, $pos);
+            $pos += $!type.emit($into, $pos);
+            $pos += self!emit-init($into, $pos);
+        }
         $pos - $offset
     }
 }
@@ -41,9 +64,19 @@ class Elements::Declarative does Elements {
 class Elements::Passive does Elements {
     method emit(Buf $into, uint $offset --> uint) {
         my int $pos = $offset;
-        $pos += encode-leb128-unsigned(5, $into, $pos);
-        $pos += $!type.emit($into, $pos);
-        $pos += self!emit-init($into, $pos);
+        with self!constant-func-ref-indexes() -> @indices {
+            $pos += encode-leb128-unsigned(1, $into, $pos);
+            $pos += encode-leb128-unsigned(0, $into, $pos);
+            $pos += encode-leb128-unsigned(@indices.elems, $into, $pos);
+            for @indices {
+                $pos += encode-leb128-unsigned($_, $into, $pos);
+            }
+        }
+        else {
+            $pos += encode-leb128-unsigned(5, $into, $pos);
+            $pos += $!type.emit($into, $pos);
+            $pos += self!emit-init($into, $pos);
+        }
         $pos - $offset
     }
 }
@@ -59,10 +92,23 @@ class Elements::Active does Elements {
     method emit(Buf $into, uint $offset --> uint) {
         my int $pos = $offset;
         if $!table-index == 0 && $!type === funcref() {
-            $pos += encode-leb128-unsigned(4, $into, $pos);
-            my $offset-expr = $!offset.assemble();
-            $into.append($offset-expr);
-            $pos += $offset-expr.elems;
+            with self!constant-func-ref-indexes() -> @indices {
+                $pos += encode-leb128-unsigned(0, $into, $pos);
+                my $offset-expr = $!offset.assemble();
+                $into.append($offset-expr);
+                $pos += $offset-expr.elems;
+                $pos += encode-leb128-unsigned(@indices.elems, $into, $pos);
+                for @indices {
+                    $pos += encode-leb128-unsigned($_, $into, $pos);
+                }
+            }
+            else {
+                $pos += encode-leb128-unsigned(4, $into, $pos);
+                my $offset-expr = $!offset.assemble();
+                $into.append($offset-expr);
+                $pos += $offset-expr.elems;
+                $pos += self!emit-init($into, $pos);
+            }
         }
         else {
             $pos += encode-leb128-unsigned(6, $into, $pos);
@@ -71,8 +117,8 @@ class Elements::Active does Elements {
             $into.append($offset-expr);
             $pos += $offset-expr.elems;
             $pos += $!type.emit($into, $pos);
+            $pos += self!emit-init($into, $pos);
         }
-        $pos += self!emit-init($into, $pos);
         $pos - $offset
     }
 }

@@ -58,12 +58,20 @@ class Elements::Active does Elements {
 
     method emit(Buf $into, uint $offset --> uint) {
         my int $pos = $offset;
-        $pos += encode-leb128-unsigned(6, $into, $pos);
-        $pos += encode-leb128-unsigned($!table-index, $into, $pos);
-        my $offset-expr = $!offset.assemble();
-        $into.append($offset-expr);
-        $pos += $offset-expr.elems;
-        $pos += $!type.emit($into, $pos);
+        if $!table-index == 0 && $!type === funcref() {
+            $pos += encode-leb128-unsigned(4, $into, $pos);
+            my $offset-expr = $!offset.assemble();
+            $into.append($offset-expr);
+            $pos += $offset-expr.elems;
+        }
+        else {
+            $pos += encode-leb128-unsigned(6, $into, $pos);
+            $pos += encode-leb128-unsigned($!table-index, $into, $pos);
+            my $offset-expr = $!offset.assemble();
+            $into.append($offset-expr);
+            $pos += $offset-expr.elems;
+            $pos += $!type.emit($into, $pos);
+        }
         $pos += self!emit-init($into, $pos);
         $pos - $offset
     }

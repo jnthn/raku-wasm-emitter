@@ -15,6 +15,7 @@
   "provides": {
     "Wasm::Emitter": "lib/Wasm/Emitter.rakumod",
     "Wasm::Emitter::Data": "lib/Wasm/Emitter/Data.rakumod",
+    "Wasm::Emitter::Elements": "lib/Wasm/Emitter/Elements.rakumod",
     "Wasm::Emitter::Exports": "lib/Wasm/Emitter/Exports.rakumod",
     "Wasm::Emitter::Expression": "lib/Wasm/Emitter/Expression.rakumod",
     "Wasm::Emitter::Function": "lib/Wasm/Emitter/Function.rakumod",

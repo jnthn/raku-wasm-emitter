@@ -1,6 +1,7 @@
 use v6.d;
 use LEB128;
 use Wasm::Emitter::Data;
+use Wasm::Emitter::Elements;
 use Wasm::Emitter::Exports;
 use Wasm::Emitter::Expression;
 use Wasm::Emitter::Function;
@@ -32,6 +33,9 @@ class Wasm::Emitter {
 
     #| Declared globals.
     has Wasm::Emitter::Global @!globals;
+
+    #| Declared elements.
+    has Wasm::Emitter::Elements @!elements;
 
     #| Declared functions.
     has Wasm::Emitter::Function @!functions;
@@ -102,6 +106,12 @@ class Wasm::Emitter {
         @!globals.end
     }
 
+    #| Declare an elements section.
+    method elements(Wasm::Emitter::Elements $elements --> Int) {
+        @!elements.push($elements);
+        @!elements.end
+    }
+
     #| Declare a function.
     method add-function(Wasm::Emitter::Function $function --> Int) {
         @!functions.push($function);
@@ -167,6 +177,13 @@ class Wasm::Emitter {
             $output.append($export);
             $pos += $export.elems;
         }
+        if @!elements {
+            my $elements = self!assemble-element-section();
+            $output.write-uint8($pos++, 9);
+            $pos += encode-leb128-unsigned($elements.elems, $output, $pos);
+            $output.append($elements);
+            $pos += $elements.elems;
+        }
         if @!data {
             my $data-count = self!assemble-data-count-section();
             $output.write-uint8($pos++, 12);
@@ -231,6 +248,10 @@ class Wasm::Emitter {
 
     method !assemble-export-section(--> Buf) {
         assemble-simple-section(@!exports)
+    }
+
+    method !assemble-element-section(--> Buf) {
+        assemble-simple-section(@!elements)
     }
 
     method !assemble-data-count-section(--> Buf) {

@@ -1,5 +1,6 @@
 use v6.d;
 use Wasm::Emitter;
+use Wasm::Emitter::Elements;
 use Wasm::Emitter::Expression;
 use Wasm::Emitter::Function;
 use Wasm::Emitter::Types;
@@ -154,6 +155,38 @@ if has-wasmtime() {
 
         my $buf = $emitter.assemble();
         pass 'Assembled module with some tables';
+        is-wasm-accepted $buf;
+    }
+
+    subtest 'Declare elements segments' => {
+        # Set up some tables and functions for use in the test.
+        my $emitter = Wasm::Emitter.new;
+        my $table-a = $emitter.table(tabletype(limitstype(8), funcref()));
+        my $table-b = $emitter.table(tabletype(limitstype(8), funcref()));
+        my @init = do for ^4 {
+            my $type-index = $emitter.intern-function-type(functype(resulttype(), resulttype(i32())));
+            my $expression = Wasm::Emitter::Expression.new;
+            $expression.i32-const(42);
+            my $func-index = $emitter.add-function(Wasm::Emitter::Function.new(:$type-index, :$expression));
+            my $init-expression = Wasm::Emitter::Expression.new;
+            $init-expression.ref-func($func-index);
+            $init-expression
+        }
+
+        # Add various kinds of element section.
+        is $emitter.elements(Wasm::Emitter::Elements::Declarative.new(:type(funcref()), :@init)),
+                0, 'Correct first elements index';
+        is $emitter.elements(Wasm::Emitter::Elements::Passive.new(:type(funcref()), :@init)),
+                1, 'Correct second elements index';
+        my $offset = Wasm::Emitter::Expression.new;
+        $offset.i32-const(0);
+        is $emitter.elements(Wasm::Emitter::Elements::Active.new(:type(funcref()), :@init, :0table-index, :$offset)),
+                2, 'Correct third elements index';
+        is $emitter.elements(Wasm::Emitter::Elements::Active.new(:type(funcref()), :@init, :1table-index, :$offset)),
+                3, 'Correct fourth elements index';
+
+        my $buf = $emitter.assemble();
+        pass 'Assembled module with a variety of elements segments';
         is-wasm-accepted $buf;
     }
 }

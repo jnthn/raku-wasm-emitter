@@ -912,6 +912,46 @@ if has-wasmtime() {
         is-function-output $buf, [2], 8;
         is-function-output $buf, [3], 12;
     }
+
+    subtest 'call_indirect, table constructed from functions loaded from passive elements' => {
+        my $emitter = Wasm::Emitter.new;
+        my $table-idx = $emitter.table(tabletype(limitstype(4), funcref()));
+        my $callee-type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $caller-type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        # Declare four functions returning integers, using declarative
+        # elements to declare them up-front.
+        my @indices;
+        my @ref-exprs;
+        for ^4 {
+            my $expression = Wasm::Emitter::Expression.new;
+            my $function = Wasm::Emitter::Function.new(:type-index($callee-type-index), :$expression);
+            $expression.i32-const(4 * $_);
+            my $func-index = $emitter.add-function($function);
+            my $ref-expression = Wasm::Emitter::Expression.new;
+            $ref-expression.ref-func($func-index);
+            @indices.push($func-index);
+            @ref-exprs.push($ref-expression);
+        }
+        my $elements-idx = $emitter.elements: Wasm::Emitter::Elements::Passive.new:
+                :type(funcref()), :init(@ref-exprs);
+        # Load elements into a table, then use it for call_indirect testing.
+        my $expression = Wasm::Emitter::Expression.new;
+        my $function = Wasm::Emitter::Function.new(:type-index($caller-type-index), :1parameters, :$expression);
+        $expression.i32-const(0);
+        $expression.i32-const(0);
+        $expression.i32-const(4);
+        $expression.table-init($elements-idx, $table-idx);
+        $expression.elem-drop($elements-idx);
+        $expression.local-get(0);
+        $expression.call-indirect($callee-type-index, $table-idx);
+        $emitter.export-function('test', $emitter.add-function($function));
+        my $buf = $emitter.assemble();
+        pass 'Assembled module';
+        is-function-output $buf, [0], 0;
+        is-function-output $buf, [1], 4;
+        is-function-output $buf, [2], 8;
+        is-function-output $buf, [3], 12;
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

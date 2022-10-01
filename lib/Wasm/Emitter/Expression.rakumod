@@ -159,6 +159,19 @@ class Wasm::Emitter::Expression {
         $!pos += encode-leb128-unsigned($table-idx, $!code, $!pos);
     }
 
+    method table-init(Int $elements-idx, Int $table-idx --> Nil) {
+        $!code.write-uint8($!pos++, 0xFC);
+        $!pos += encode-leb128-unsigned(12, $!code, $!pos);
+        $!pos += encode-leb128-unsigned($elements-idx, $!code, $!pos);
+        $!pos += encode-leb128-unsigned($table-idx, $!code, $!pos);
+    }
+
+    method elem-drop(Int $elements-idx --> Nil) {
+        $!code.write-uint8($!pos++, 0xFC);
+        $!pos += encode-leb128-unsigned(13, $!code, $!pos);
+        $!pos += encode-leb128-unsigned($elements-idx, $!code, $!pos);
+    }
+
     method table-copy(Int $table-idx-dst, Int $table-idx-src --> Nil) {
         $!code.write-uint8($!pos++, 0xFC);
         $!pos += encode-leb128-unsigned(14, $!code, $!pos);

@@ -96,6 +96,14 @@ class Wasm::Emitter {
         @!exports.push: Wasm::Emitter::GlobalExport.new(:$name, :$global-index);
     }
 
+    #| Export a table.
+    method export-table(Str $name, Int $table-index --> Nil) {
+        if $table-index < 0 || $table-index >= @!tables.elems {
+            die "Table index out of range";
+        }
+        @!exports.push: Wasm::Emitter::TableExport.new(:$name, :$table-index);
+    }
+
     #| Declare a passive data section.
     method passive-data(Blob $data --> Int) {
         @!data.push: Wasm::Emitter::Data::Passive.new(:$data);

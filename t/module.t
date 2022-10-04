@@ -147,12 +147,13 @@ if has-wasmtime() {
         is-wasm-accepted $buf;
     }
 
-    subtest 'Declare tables' => {
+    subtest 'Declare and export tables' => {
         my $emitter = Wasm::Emitter.new;
         is $emitter.table(tabletype(limitstype(8, 8), funcref())), 0,
             'First table got expected index';
         is $emitter.table(tabletype(limitstype(8), externref())), 1,
                 'Second table got expected index';
+        $emitter.export-table('funcymcfuncface', $emitter.table(tabletype(limitstype(4), funcref)));
 
         my $buf = $emitter.assemble();
         pass 'Assembled module with some tables';

@@ -52,4 +52,16 @@ package Wasm::Emitter {
             $pos - $offset
         }
     }
+
+    #| A table export.
+    class TableExport does Export {
+        has Int $.table-index is required;
+
+        method emit-desc(Buf $into, uint $offset --> uint) {
+            my int $pos = $offset;
+            $into.write-uint8($pos++, 0x01);
+            $pos += encode-leb128-unsigned($!table-index, $into, $pos);
+            $pos - $offset
+        }
+    }
 }

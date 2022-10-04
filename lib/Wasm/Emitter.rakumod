@@ -88,6 +88,14 @@ class Wasm::Emitter {
         @!exports.push: Wasm::Emitter::MemoryExport.new(:$name, :$memory-index);
     }
 
+    #| Export a global.
+    method export-global(Str $name, Int $global-index --> Nil) {
+        if $global-index < 0 || $global-index >= @!globals.elems {
+            die "Global index out of range";
+        }
+        @!exports.push: Wasm::Emitter::GlobalExport.new(:$name, :$global-index);
+    }
+
     #| Declare a passive data section.
     method passive-data(Blob $data --> Int) {
         @!data.push: Wasm::Emitter::Data::Passive.new(:$data);

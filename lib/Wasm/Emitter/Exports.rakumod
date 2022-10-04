@@ -40,4 +40,16 @@ package Wasm::Emitter {
             $pos - $offset
         }
     }
+
+    #| A global export.
+    class GlobalExport does Export {
+        has Int $.global-index is required;
+
+        method emit-desc(Buf $into, uint $offset --> uint) {
+            my int $pos = $offset;
+            $into.write-uint8($pos++, 0x03);
+            $pos += encode-leb128-unsigned($!global-index, $into, $pos);
+            $pos - $offset
+        }
+    }
 }

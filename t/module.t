@@ -132,7 +132,7 @@ if has-wasmtime() {
         is-wasm-accepted $buf;
     }
 
-    subtest 'Declare a global' => {
+    subtest 'Declare and export globals' => {
         my $emitter = Wasm::Emitter.new;
         my $expression = Wasm::Emitter::Expression.new;
         $expression.i64-const(42);
@@ -140,6 +140,7 @@ if has-wasmtime() {
                 'Got expected index for first added global';
         is $emitter.global(globaltype(i64(), :mutable), $expression), 1,
                 'Got expected index for second added global';
+        $emitter.export-global('foo', $emitter.global(globaltype(i64()), $expression));
 
         my $buf = $emitter.assemble();
         pass 'Assembled module with some globals';

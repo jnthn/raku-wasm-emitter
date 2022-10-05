@@ -227,6 +227,26 @@ if has-wasmtime() {
         is $emitter.global(globaltype(i64()), $expression), 1,
             'Global indices account for global imports';
     }
+
+    subtest 'Cannot add imports after declarations of the same kind' => {
+        my $emitter = Wasm::Emitter.new;
+        my $type-index = $emitter.intern-function-type(functype(resulttype(), resulttype(i64())));
+        my $expression = Wasm::Emitter::Expression.new;
+        $expression.i64-const(42);
+        $emitter.add-function(Wasm::Emitter::Function.new(:$type-index, :$expression));
+        $emitter.table(tabletype(limitstype(8), funcref()));
+        $emitter.add-memory(limitstype(64));
+        $emitter.global(globaltype(i64()), $expression);
+
+        dies-ok { $emitter.import-function('mod', 'func', $type-index) },
+            'Cannot import function after declaring one';
+        dies-ok { $emitter.import-table("mod", "tab1", tabletype(limitstype(8), funcref())) },
+            'Cannot import table after declaring one';
+        dies-ok { $emitter.import-memory("mod", "mem1", limitstype(0)); },
+            'Cannot import memory after declaring one';
+        dies-ok { $emitter.import-global("mod", "global1", globaltype(i64())) },
+            'Cannot import global after declaring one';
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

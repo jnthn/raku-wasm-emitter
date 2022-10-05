@@ -62,6 +62,9 @@ class Wasm::Emitter {
 
     #| Add a function import.
     method import-function(Str $module, Str $name, Int $type-index --> Int) {
+        if @!functions {
+            die 'All function imports must be performed before any function declarations';
+        }
         if $type-index < 0 || $type-index >= @!function-types.elems {
             die "Type index out of range";
         }
@@ -71,18 +74,27 @@ class Wasm::Emitter {
 
     #| Add a table import.
     method import-table(Str $module, Str $name, Wasm::Emitter::Types::TableType $table-type --> Int) {
+        if @!tables {
+            die 'All table imports must be performed before any table declarations';
+        }
         @!table-imports.push: Wasm::Emitter::TableImport.new(:$module, :$name, :$table-type);
         @!table-imports.end
     }
 
     #| Add a memory import.
     method import-memory(Str $module, Str $name, Wasm::Emitter::Types::LimitType $memory-type --> Int) {
+        if @!memories {
+            die 'All memory imports must be performed before any memory declarations';
+        }
         @!memory-imports.push: Wasm::Emitter::MemoryImport.new(:$module, :$name, :$memory-type);
         @!memory-imports.end
     }
 
     #| Add a global import.
     method import-global(Str $module, Str $name, Wasm::Emitter::Types::GlobalType $global-type --> Int) {
+        if @!globals {
+            die 'All global imports must be performed before any global declarations';
+        }
         @!global-imports.push: Wasm::Emitter::GlobalImport.new(:$module, :$name, :$global-type);
         @!global-imports.end
     }

@@ -19,6 +19,15 @@ class Wasm::Emitter {
     #| Function imports.
     has Wasm::Emitter::FunctionImport @!function-imports;
 
+    #| Table imports.
+    has Wasm::Emitter::TableImport @!table-imports;
+
+    #| Memory imports.
+    has Wasm::Emitter::MemoryImport @!memory-imports;
+
+    #| Global imports.
+    has Wasm::Emitter::GlobalImport @!global-imports;
+
     #| Declared tables, with their table types.
     has Wasm::Emitter::Types::TableType @!tables;
 
@@ -60,16 +69,34 @@ class Wasm::Emitter {
         @!function-imports.end
     }
 
+    #| Add a table import.
+    method import-table(Str $module, Str $name, Wasm::Emitter::Types::TableType $table-type --> Int) {
+        @!table-imports.push: Wasm::Emitter::TableImport.new(:$module, :$name, :$table-type);
+        @!table-imports.end
+    }
+
+    #| Add a memory import.
+    method import-memory(Str $module, Str $name, Wasm::Emitter::Types::LimitType $memory-type --> Int) {
+        @!memory-imports.push: Wasm::Emitter::MemoryImport.new(:$module, :$name, :$memory-type);
+        @!memory-imports.end
+    }
+
+    #| Add a global import.
+    method import-global(Str $module, Str $name, Wasm::Emitter::Types::GlobalType $global-type --> Int) {
+        @!global-imports.push: Wasm::Emitter::GlobalImport.new(:$module, :$name, :$global-type);
+        @!global-imports.end
+    }
+
     #| Declare a table.
     method table(Wasm::Emitter::Types::TableType $table-type --> Int) {
         @!tables.push($table-type);
-        @!tables.end
+        @!table-imports.elems + @!tables.end
     }
 
     #| Add a declaration of a memory.
     method add-memory(Wasm::Emitter::Types::LimitType $limits --> Int) {
         @!memories.push($limits);
-        @!memories.end
+        @!memory-imports.elems + @!memories.end
     }
 
     #| Export a function.
@@ -119,7 +146,7 @@ class Wasm::Emitter {
     #| Declare a global.
     method global(Wasm::Emitter::Types::GlobalType $type, Wasm::Emitter::Expression $init --> Int) {
         @!globals.push: Wasm::Emitter::Global.new(:$type, :$init);
-        @!globals.end
+        @!global-imports.elems + @!globals.end
     }
 
     #| Declare an elements section.
@@ -131,7 +158,7 @@ class Wasm::Emitter {
     #| Declare a function.
     method add-function(Wasm::Emitter::Function $function --> Int) {
         @!functions.push($function);
-        @!function-imports + @!functions.end
+        @!function-imports.elems + @!functions.end
     }
 
     #| Assemble the produced declarations into a final output.
@@ -151,7 +178,7 @@ class Wasm::Emitter {
             $output.append($type-section);
             $pos += $type-section.elems;
         }
-        if @!function-imports #`( TODO et al ) {
+        if @!function-imports || @!table-imports || @!memory-imports || @!global-imports {
             my $import-section = self!assemble-import-section();
             $output.write-uint8($pos++, 2);
             $pos += encode-leb128-unsigned($import-section.elems, $output, $pos);
@@ -230,11 +257,11 @@ class Wasm::Emitter {
     }
 
     method !assemble-import-section(--> Buf) {
+        my @imports = flat @!function-imports, @!table-imports, @!memory-imports, @!global-imports;
         my $output = Buf.new;
         my int $pos = 0;
-        my uint $import-count = [+] @!function-imports.elems; #`( TODO et al )
-        $pos += encode-leb128-unsigned($import-count, $output, $pos);
-        for @!function-imports {
+        $pos += encode-leb128-unsigned(@imports.elems, $output, $pos);
+        for @imports {
             $pos += .emit($output, $pos);
         }
         return $output;

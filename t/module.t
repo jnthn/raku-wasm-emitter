@@ -191,6 +191,42 @@ if has-wasmtime() {
         pass 'Assembled module with a variety of elements segments';
         is-wasm-accepted $buf;
     }
+
+    subtest 'Other imports' => {
+        my $emitter = Wasm::Emitter.new;
+        is $emitter.import-table("mod", "tab1", tabletype(limitstype(8), funcref())),
+                0, 'First table import gets expected index';
+        is $emitter.import-table("mod", "tab2", tabletype(limitstype(8), funcref())),
+                1, 'Second table import gets expected index';
+        is $emitter.import-memory("mod", "mem1", limitstype(0)),
+                0, 'First memory import gets expected index';
+        is $emitter.import-memory("mod", "mem2", limitstype(8)),
+                1, 'Second memory import gets expected index';
+        is $emitter.import-global("mod", "global1", globaltype(i64())),
+                0, 'First global import gets expected index';
+        is $emitter.import-global("mod", "global2", globaltype(i64(), :mutable)),
+                1, 'Second global import gets expected index';
+
+        $emitter.assemble();
+        pass 'Assembled module with some function imports';
+        # No obviously available real imports to test it with against runtime
+    }
+
+    subtest 'Imports affect offsets' => {
+        my $emitter = Wasm::Emitter.new;
+        $emitter.import-table("mod", "tab1", tabletype(limitstype(8), funcref()));
+        $emitter.import-memory("mod", "mem1", limitstype(0));
+        $emitter.import-global("mod", "global1", globaltype(i64()));
+
+        is $emitter.table(tabletype(limitstype(8), funcref())), 1,
+            'Table indices account for table imports';
+        is $emitter.add-memory(limitstype(64)), 1,
+            'Memory indices account for memory imports';
+        my $expression = Wasm::Emitter::Expression.new;
+        $expression.i64-const(42);
+        is $emitter.global(globaltype(i64()), $expression), 1,
+            'Global indices account for global imports';
+    }
 }
 else {
     skip 'No wasmtime available to run test output; skipping';

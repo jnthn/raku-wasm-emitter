@@ -41,15 +41,15 @@ if has-wasmtime() {
 
     subtest 'Function types' => {
         my $emitter = Wasm::Emitter.new;
-        is $emitter.intern-function-type(functype(resulttype(i64(), i32()), resulttype(i64()))),
+        is $emitter.function-type(functype(resulttype(i64(), i32()), resulttype(i64()))),
             0, 'Function type interned at index 0';
-        is $emitter.intern-function-type(functype(resulttype(i32(), i32()), resulttype(i64()))),
+        is $emitter.function-type(functype(resulttype(i32(), i32()), resulttype(i64()))),
                 1, 'Different type interned at index 1';
-        is $emitter.intern-function-type(functype(resulttype(i32(), i32()), resulttype(i32()))),
+        is $emitter.function-type(functype(resulttype(i32(), i32()), resulttype(i32()))),
                 2, 'Different type interned at index 2';
-        is $emitter.intern-function-type(functype(resulttype(i32(), i32()), resulttype(i64()))),
+        is $emitter.function-type(functype(resulttype(i32(), i32()), resulttype(i64()))),
                 1, 'Interning works (1)';
-        is $emitter.intern-function-type(functype(resulttype(i64(), i32()), resulttype(i64()))),
+        is $emitter.function-type(functype(resulttype(i64(), i32()), resulttype(i64()))),
                 0, 'Interning works (2)';
 
         my $buf = $emitter.assemble();
@@ -59,7 +59,7 @@ if has-wasmtime() {
 
     subtest 'Function imports' => {
         my $emitter = Wasm::Emitter.new;
-        my $typeidx = $emitter.intern-function-type:
+        my $typeidx = $emitter.function-type:
                 functype(resulttype(i32(), i32(), i32(), i32()), resulttype(i32()));
         is $emitter.import-function("wasi_unstable", "fd_write", $typeidx),
                 0, 'First imported function got expected 0 index';
@@ -73,7 +73,7 @@ if has-wasmtime() {
 
     subtest 'Declare a memory' => {
         my $emitter = Wasm::Emitter.new;
-        is $emitter.add-memory(limitstype(0)), 0,
+        is $emitter.memory(limitstype(0)), 0,
                 'Expected index for added memory';
 
         my $buf = $emitter.assemble();
@@ -83,7 +83,7 @@ if has-wasmtime() {
 
     subtest 'Declare and export a memory' => {
         my $emitter = Wasm::Emitter.new;
-        my $memory = $emitter.add-memory(limitstype(1));
+        my $memory = $emitter.memory(limitstype(1));
         $emitter.export-memory("memory", $memory);
 
         my $buf = $emitter.assemble();
@@ -93,7 +93,7 @@ if has-wasmtime() {
 
     subtest 'Declare data' => {
         my $emitter = Wasm::Emitter.new;
-        $emitter.add-memory(limitstype(1));
+        $emitter.memory(limitstype(1));
         is $emitter.passive-data("hello world\n".encode('utf-8')), 0,
                 'First (passive) data declaration at index zero';
         my $expression = Wasm::Emitter::Expression.new;
@@ -108,10 +108,10 @@ if has-wasmtime() {
 
     subtest 'Function declaration' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type(functype(resulttype(), resulttype(i32())));
+        my $type-index = $emitter.function-type(functype(resulttype(), resulttype(i32())));
         my $expression = Wasm::Emitter::Expression.new;
         $expression.i32-const(42);
-        is $emitter.add-function(Wasm::Emitter::Function.new(:$type-index, :$expression)),
+        is $emitter.function(Wasm::Emitter::Function.new(:$type-index, :$expression)),
                 0, 'Correct index for first added function';
 
         my $buf = $emitter.assemble();
@@ -121,10 +121,10 @@ if has-wasmtime() {
 
     subtest 'Function export' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type(functype(resulttype(), resulttype(i32())));
+        my $type-index = $emitter.function-type(functype(resulttype(), resulttype(i32())));
         my $expression = Wasm::Emitter::Expression.new;
         $expression.i32-const(42);
-        my $func-index = $emitter.add-function(Wasm::Emitter::Function.new(:$type-index, :$expression));
+        my $func-index = $emitter.function(Wasm::Emitter::Function.new(:$type-index, :$expression));
         $emitter.export-function('answer', $func-index);
 
         my $buf = $emitter.assemble();
@@ -166,10 +166,10 @@ if has-wasmtime() {
         my $table-a = $emitter.table(tabletype(limitstype(8), funcref()));
         my $table-b = $emitter.table(tabletype(limitstype(8), funcref()));
         my @init = do for ^4 {
-            my $type-index = $emitter.intern-function-type(functype(resulttype(), resulttype(i32())));
+            my $type-index = $emitter.function-type(functype(resulttype(), resulttype(i32())));
             my $expression = Wasm::Emitter::Expression.new;
             $expression.i32-const(42);
-            my $func-index = $emitter.add-function(Wasm::Emitter::Function.new(:$type-index, :$expression));
+            my $func-index = $emitter.function(Wasm::Emitter::Function.new(:$type-index, :$expression));
             my $init-expression = Wasm::Emitter::Expression.new;
             $init-expression.ref-func($func-index);
             $init-expression
@@ -220,7 +220,7 @@ if has-wasmtime() {
 
         is $emitter.table(tabletype(limitstype(8), funcref())), 1,
             'Table indices account for table imports';
-        is $emitter.add-memory(limitstype(64)), 1,
+        is $emitter.memory(limitstype(64)), 1,
             'Memory indices account for memory imports';
         my $expression = Wasm::Emitter::Expression.new;
         $expression.i64-const(42);
@@ -230,12 +230,12 @@ if has-wasmtime() {
 
     subtest 'Cannot add imports after declarations of the same kind' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type(functype(resulttype(), resulttype(i64())));
+        my $type-index = $emitter.function-type(functype(resulttype(), resulttype(i64())));
         my $expression = Wasm::Emitter::Expression.new;
         $expression.i64-const(42);
-        $emitter.add-function(Wasm::Emitter::Function.new(:$type-index, :$expression));
+        $emitter.function(Wasm::Emitter::Function.new(:$type-index, :$expression));
         $emitter.table(tabletype(limitstype(8), funcref()));
-        $emitter.add-memory(limitstype(64));
+        $emitter.memory(limitstype(64));
         $emitter.global(globaltype(i64()), $expression);
 
         dies-ok { $emitter.import-function('mod', 'func', $type-index) },

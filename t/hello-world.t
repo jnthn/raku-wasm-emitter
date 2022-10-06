@@ -47,12 +47,12 @@ if has-wasmtime() {
         my $emitter = Wasm::Emitter.new;
 
         # Import fd_write
-        my $fd-write-type = $emitter.intern-function-type:
+        my $fd-write-type = $emitter.function-type:
                 functype(resulttype(i32(), i32(), i32(), i32()), resulttype(i32()));
         my $fd-write-index = $emitter.import-function("wasi_unstable", "fd_write", $fd-write-type);
 
         # Declare and export a memory.
-        $emitter.export-memory("memory", $emitter.add-memory(limitstype(1)));
+        $emitter.export-memory("memory", $emitter.memory(limitstype(1)));
 
         # Write 'hello world\n' to memory at an offset of 8 bytes
         my $offset-expression = Wasm::Emitter::Expression.new;
@@ -86,8 +86,8 @@ if has-wasmtime() {
         }
 
         # Declare and export the start function.
-        my $start-type = $emitter.intern-function-type: functype(resulttype(), resulttype());
-        my $start-func-index = $emitter.add-function: Wasm::Emitter::Function.new:
+        my $start-type = $emitter.function-type: functype(resulttype(), resulttype());
+        my $start-func-index = $emitter.function: Wasm::Emitter::Function.new:
                 :type-index($start-type), :expression($code);
         $emitter.export-function('_start', $start-func-index);
 

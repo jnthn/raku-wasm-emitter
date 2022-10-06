@@ -45,8 +45,8 @@ sub is-function-output(Buf $wasm, @args, $expected, :$function = 'test') {
 
 sub test-nullary(Wasm::Emitter::Expression $expression, Wasm::Emitter::Types::ValueType $type, $expected) {
     my $emitter = Wasm::Emitter.new;
-    my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype($type));
-    my $func-index = $emitter.add-function: Wasm::Emitter::Function.new(:$type-index, :$expression);
+    my $type-index = $emitter.function-type: functype(resulttype(), resulttype($type));
+    my $func-index = $emitter.function: Wasm::Emitter::Function.new(:$type-index, :$expression);
     $emitter.export-function('test', $func-index);
     my $buf = $emitter.assemble();
     pass 'Assembled module';
@@ -194,18 +194,18 @@ if has-wasmtime() {
 
     subtest 'Locals and instructions (get/set/tee)' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
-        my $local-id-a = $function.declare-local(i32());
-        my $local-id-b = $function.declare-local(i32());
+        my $local-id-a = $function.local(i32());
+        my $local-id-b = $function.local(i32());
         $expression.i32-const(99);
         $expression.local-set($local-id-a);
         $expression.local-get($local-id-a);
         $expression.local-tee($local-id-b);
         $expression.drop;
         $expression.local-get($local-id-b);
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [], '99';
@@ -213,17 +213,17 @@ if has-wasmtime() {
 
     subtest 'Parameters' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type: functype(resulttype(i32(), i32()), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(i32(), i32()), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :2parameters, :$expression);
-        my $local-id = $function.declare-local(i32());
+        my $local-id = $function.local(i32());
         is $local-id, 2, 'Locals numbered from parameter count';
         $expression.local-get(0);
         $expression.local-get(1);
         $expression.i32-sub();
         $expression.local-set($local-id);
         $expression.local-get($local-id);
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [49, 7], '42';
@@ -231,7 +231,7 @@ if has-wasmtime() {
 
     subtest 'nop, return, and unreachable' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
         $expression.nop();
@@ -239,7 +239,7 @@ if has-wasmtime() {
         $expression.nop();
         $expression.return();
         $expression.unreachable();
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [], '101';
@@ -247,7 +247,7 @@ if has-wasmtime() {
 
     subtest 'if' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(i32()), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :1parameters, :$expression);
         $expression.local-get(0);
@@ -256,7 +256,7 @@ if has-wasmtime() {
             $expression.return;
         }
         $expression.i32-const(100);
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [1], '99';
@@ -265,7 +265,7 @@ if has-wasmtime() {
 
     subtest 'if' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(i32()), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :1parameters, :$expression);
         $expression.local-get(0);
@@ -276,7 +276,7 @@ if has-wasmtime() {
                 {
                     $expression.i32-const(75);
                 };
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [1], '25';
@@ -285,7 +285,7 @@ if has-wasmtime() {
 
     subtest 'block/br' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
         $expression.block: :blocktype(i32()), {
@@ -294,7 +294,7 @@ if has-wasmtime() {
             $expression.drop();
             $expression.i32-const(69);
         }
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [], '66';
@@ -302,7 +302,7 @@ if has-wasmtime() {
 
     subtest 'block/br_if' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(i32()), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index :1parameters, :$expression);
         $expression.block: :blocktype(i32()), {
@@ -312,7 +312,7 @@ if has-wasmtime() {
             $expression.drop();
             $expression.i32-const(69);
         }
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [1], '66';
@@ -321,10 +321,10 @@ if has-wasmtime() {
 
     subtest 'loop' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(i32()), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index :1parameters, :$expression);
-        my $res = $function.declare-local(i32());
+        my $res = $function.local(i32());
         $expression.i32-const(1);
         $expression.local-set($res);
         $expression.local-get(0);
@@ -342,7 +342,7 @@ if has-wasmtime() {
             }
         }
         $expression.local-get($res);
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [0], '1';
@@ -355,7 +355,7 @@ if has-wasmtime() {
 
     subtest 'br_table' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(i32()), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index :1parameters, :$expression);
         $expression.block: {
@@ -371,7 +371,7 @@ if has-wasmtime() {
             $expression.return();
         }
         $expression.i32-const(300);
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [0], '100';
@@ -383,14 +383,14 @@ if has-wasmtime() {
 
     subtest 'select (no type)' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(i32()), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index :1parameters, :$expression);
         $expression.i32-const(55);
         $expression.i32-const(66);
         $expression.local-get(0);
         $expression.select();
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [0], '66';
@@ -399,14 +399,14 @@ if has-wasmtime() {
 
     subtest 'select (type)' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(i32()), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index :1parameters, :$expression);
         $expression.i32-const(55);
         $expression.i32-const(66);
         $expression.local-get(0);
         $expression.select(i32());
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [0], '66';
@@ -417,7 +417,7 @@ if has-wasmtime() {
         for @cases -> $case {
             my $emitter = Wasm::Emitter.new;
             my $in-resulttype = $const-ins ?? resulttype() !! resulttype($in-type);
-            my $type-index = $emitter.intern-function-type: functype($in-resulttype, resulttype($out-type));
+            my $type-index = $emitter.function-type: functype($in-resulttype, resulttype($out-type));
             my $expression = Wasm::Emitter::Expression.new;
             my $function = Wasm::Emitter::Function.new(:$type-index :parameters($const-ins ?? 0 !! 1), :$expression);
             if $const-ins {
@@ -427,7 +427,7 @@ if has-wasmtime() {
                 $expression.local-get(0);
             }
             $expression."$op"();
-            $emitter.export-function('test', $emitter.add-function($function));
+            $emitter.export-function('test', $emitter.function($function));
             my $buf = $emitter.assemble();
             pass 'Assembled module';
             is-function-output $buf, $const-ins ?? [] !! [$case.key], $case.value;
@@ -512,8 +512,8 @@ if has-wasmtime() {
     for 'i32-', i32(), 'i64-', i64(), 'f32-', f32(), 'f64-', f64() -> $prefix, $type {
         subtest "{$prefix}load and {$prefix}store" => {
             my $emitter = Wasm::Emitter.new;
-            $emitter.add-memory(limitstype(1));
-            my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype($type));
+            $emitter.memory(limitstype(1));
+            my $type-index = $emitter.function-type: functype(resulttype(), resulttype($type));
             my $expression = Wasm::Emitter::Expression.new;
             my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
             $expression.i32-const(8);
@@ -521,7 +521,7 @@ if has-wasmtime() {
             $expression."{$prefix}store"();
             $expression.i32-const(8);
             $expression."{$prefix}load"();
-            $emitter.export-function('test', $emitter.add-function($function));
+            $emitter.export-function('test', $emitter.function($function));
             my $buf = $emitter.assemble();
             pass 'Assembled module';
             is-function-output $buf, [], 42;
@@ -531,8 +531,8 @@ if has-wasmtime() {
     for '8-s', -1, '8-u', 255, '16-s', -1, '16-u', 65535 -> $suffix, $expected {
         subtest "i32.load$suffix" => {
             my $emitter = Wasm::Emitter.new;
-            $emitter.add-memory(limitstype(1));
-            my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+            $emitter.memory(limitstype(1));
+            my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
             my $expression = Wasm::Emitter::Expression.new;
             my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
             $expression.i32-const(4);
@@ -540,7 +540,7 @@ if has-wasmtime() {
             $expression.i32-store();
             $expression.i32-const(4);
             $expression."i32-load$suffix"();
-            $emitter.export-function('test', $emitter.add-function($function));
+            $emitter.export-function('test', $emitter.function($function));
             my $buf = $emitter.assemble();
             pass 'Assembled module';
             is-function-output $buf, [], $expected;
@@ -550,8 +550,8 @@ if has-wasmtime() {
     for '8-s', -1, '8-u', 255, '16-s', -1, '16-u', 65535, '32-s', -1, '32-u', 4294967295 -> $suffix, $expected {
         subtest "i64.load$suffix" => {
             my $emitter = Wasm::Emitter.new;
-            $emitter.add-memory(limitstype(1));
-            my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i64()));
+            $emitter.memory(limitstype(1));
+            my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i64()));
             my $expression = Wasm::Emitter::Expression.new;
             my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
             $expression.i32-const(4);
@@ -559,7 +559,7 @@ if has-wasmtime() {
             $expression.i64-store();
             $expression.i32-const(4);
             $expression."i64-load$suffix"();
-            $emitter.export-function('test', $emitter.add-function($function));
+            $emitter.export-function('test', $emitter.function($function));
             my $buf = $emitter.assemble();
             pass 'Assembled module';
             is-function-output $buf, [], $expected;
@@ -569,8 +569,8 @@ if has-wasmtime() {
     for '8', 0x0000FF00, '16', 0x00FFFF00 -> $suffix, $expected {
         subtest "i32.store$suffix" => {
             my $emitter = Wasm::Emitter.new;
-            $emitter.add-memory(limitstype(1));
-            my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+            $emitter.memory(limitstype(1));
+            my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
             my $expression = Wasm::Emitter::Expression.new;
             my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
             $expression.i32-const(1);
@@ -578,7 +578,7 @@ if has-wasmtime() {
             $expression."i32-store$suffix"(:0align);
             $expression.i32-const(0);
             $expression.i32-load();
-            $emitter.export-function('test', $emitter.add-function($function));
+            $emitter.export-function('test', $emitter.function($function));
             my $buf = $emitter.assemble();
             pass 'Assembled module';
             is-function-output $buf, [], $expected;
@@ -588,8 +588,8 @@ if has-wasmtime() {
     for '8', 0x00000000_0000FF00, '16', 0x00000000_00FFFF00, '32', 0x000000FF_FFFFFF00 -> $suffix, $expected {
         subtest "i64.store$suffix" => {
             my $emitter = Wasm::Emitter.new;
-            $emitter.add-memory(limitstype(1));
-            my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i64()));
+            $emitter.memory(limitstype(1));
+            my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i64()));
             my $expression = Wasm::Emitter::Expression.new;
             my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
             $expression.i32-const(1);
@@ -597,7 +597,7 @@ if has-wasmtime() {
             $expression."i64-store$suffix"(:0align);
             $expression.i32-const(0);
             $expression.i64-load();
-            $emitter.export-function('test', $emitter.add-function($function));
+            $emitter.export-function('test', $emitter.function($function));
             my $buf = $emitter.assemble();
             pass 'Assembled module';
             is-function-output $buf, [], $expected;
@@ -606,12 +606,12 @@ if has-wasmtime() {
 
     subtest 'memory.size' => {
         my $emitter = Wasm::Emitter.new;
-        $emitter.add-memory(limitstype(4));
-        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        $emitter.memory(limitstype(4));
+        my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
         $expression.memory-size();
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [], 4;
@@ -619,15 +619,15 @@ if has-wasmtime() {
 
     subtest 'memory.grow' => {
         my $emitter = Wasm::Emitter.new;
-        $emitter.add-memory(limitstype(4));
-        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        $emitter.memory(limitstype(4));
+        my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
         $expression.i32-const(2);
         $expression.memory-grow();
         $expression.drop();
         $expression.memory-size();
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [], 6;
@@ -635,8 +635,8 @@ if has-wasmtime() {
 
     subtest 'memory.fill, memory.copy' => {
         my $emitter = Wasm::Emitter.new;
-        $emitter.add-memory(limitstype(1));
-        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i64()));
+        $emitter.memory(limitstype(1));
+        my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i64()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
         $expression.i32-const(1);
@@ -649,7 +649,7 @@ if has-wasmtime() {
         $expression.memory-copy();
         $expression.i32-const(0);
         $expression.i64-load();
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [], 0x00FFFF00_00FFFF00;
@@ -657,8 +657,8 @@ if has-wasmtime() {
 
     subtest 'memory.init, data.drop' => {
         my $emitter = Wasm::Emitter.new;
-        $emitter.add-memory(limitstype(1));
-        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        $emitter.memory(limitstype(1));
+        my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
         my $data-idx = $emitter.passive-data(Buf.new(0xFE, 0xCA));
@@ -669,7 +669,7 @@ if has-wasmtime() {
         $expression.data-drop($data-idx);
         $expression.i32-const(0);
         $expression.i32-load();
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [], 0x00CAFE00;
@@ -680,7 +680,7 @@ if has-wasmtime() {
         my $init-expression = Wasm::Emitter::Expression.new;
         $init-expression.i32-const(2);
         my $global-idx = $emitter.global(globaltype(i32(), :mutable), $init-expression);
-        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
         $expression.global-get($global-idx);
@@ -688,7 +688,7 @@ if has-wasmtime() {
         $expression.global-set($global-idx);
         $expression.global-get($global-idx);
         $expression.i32-mul();
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [], 2 * 3;
@@ -696,12 +696,12 @@ if has-wasmtime() {
 
     subtest 'ref.null and ref.is_null' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
         $expression.ref-null(funcref());
         $expression.ref-is-null();
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [], 1;
@@ -709,10 +709,10 @@ if has-wasmtime() {
 
     subtest 'ref.func and ref.is_null' => {
         my $emitter = Wasm::Emitter.new;
-        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
-        my $func-idx = $emitter.add-function($function);
+        my $func-idx = $emitter.function($function);
         $expression.ref-func($func-idx);
         $expression.ref-is-null();
         $emitter.export-function('test', $func-idx);
@@ -724,13 +724,13 @@ if has-wasmtime() {
     subtest 'table.get' => {
         my $emitter = Wasm::Emitter.new;
         my $table-idx = $emitter.table(tabletype(limitstype(8), externref()));
-        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
         $expression.i32-const(0);
         $expression.table-get($table-idx);
         $expression.ref-is-null();
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [], 1;
@@ -739,10 +739,10 @@ if has-wasmtime() {
     subtest 'table.set' => {
         my $emitter = Wasm::Emitter.new;
         my $table-idx = $emitter.table(tabletype(limitstype(8), funcref()));
-        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
-        my $func-idx = $emitter.add-function($function);
+        my $func-idx = $emitter.function($function);
         $expression.i32-const(0);
         $expression.ref-func($func-idx);
         $expression.table-set($table-idx);
@@ -758,7 +758,7 @@ if has-wasmtime() {
     subtest 'table.size and table.grow' => {
         my $emitter = Wasm::Emitter.new;
         my $table-idx = $emitter.table(tabletype(limitstype(8), externref()));
-        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
         $expression.table-size($table-idx);
@@ -768,7 +768,7 @@ if has-wasmtime() {
         $expression.drop();
         $expression.table-size($table-idx);
         $expression.i32-add();
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [], 8 + 12;
@@ -778,10 +778,10 @@ if has-wasmtime() {
         my $emitter = Wasm::Emitter.new;
         my $table-idx-a = $emitter.table(tabletype(limitstype(8), funcref()));
         my $table-idx-b = $emitter.table(tabletype(limitstype(8), funcref()));
-        my $type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
+        my $type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
         my $expression = Wasm::Emitter::Expression.new;
         my $function = Wasm::Emitter::Function.new(:$type-index, :$expression);
-        my $func-idx = $emitter.add-function($function);
+        my $func-idx = $emitter.function($function);
         $expression.i32-const(0);
         $expression.ref-func($func-idx);
         $expression.i32-const(4);
@@ -802,8 +802,8 @@ if has-wasmtime() {
     subtest 'call_indirect, table constructed from functions in globals' => {
         my $emitter = Wasm::Emitter.new;
         my $table-idx = $emitter.table(tabletype(limitstype(4), funcref()));
-        my $callee-type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
-        my $caller-type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $callee-type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
+        my $caller-type-index = $emitter.function-type: functype(resulttype(i32()), resulttype(i32()));
         # Declare four functions returning integers. We also have to put them
         # into some kind of declaration to make them possible to reference;
         # use a global for that.
@@ -811,7 +811,7 @@ if has-wasmtime() {
             my $expression = Wasm::Emitter::Expression.new;
             my $function = Wasm::Emitter::Function.new(:type-index($callee-type-index), :$expression);
             $expression.i32-const(4 * $_);
-            my $func-index = $emitter.add-function($function);
+            my $func-index = $emitter.function($function);
             my $ref-expression = Wasm::Emitter::Expression.new;
             $ref-expression.ref-func($func-index);
             $emitter.global(globaltype(funcref()), $ref-expression);
@@ -827,7 +827,7 @@ if has-wasmtime() {
         }
         $expression.local-get(0);
         $expression.call-indirect($callee-type-index, $table-idx);
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [0], 0;
@@ -839,8 +839,8 @@ if has-wasmtime() {
     subtest 'call_indirect, table constructed from functions in declarative elements' => {
         my $emitter = Wasm::Emitter.new;
         my $table-idx = $emitter.table(tabletype(limitstype(4), funcref()));
-        my $callee-type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
-        my $caller-type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $callee-type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
+        my $caller-type-index = $emitter.function-type: functype(resulttype(i32()), resulttype(i32()));
         # Declare four functions returning integers, using declarative
         # elements to declare them up-front.
         my @indices;
@@ -849,7 +849,7 @@ if has-wasmtime() {
             my $expression = Wasm::Emitter::Expression.new;
             my $function = Wasm::Emitter::Function.new(:type-index($callee-type-index), :$expression);
             $expression.i32-const(4 * $_);
-            my $func-index = $emitter.add-function($function);
+            my $func-index = $emitter.function($function);
             my $ref-expression = Wasm::Emitter::Expression.new;
             $ref-expression.ref-func($func-index);
             @indices.push($func-index);
@@ -866,7 +866,7 @@ if has-wasmtime() {
         }
         $expression.local-get(0);
         $expression.call-indirect($callee-type-index, $table-idx);
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [0], 0;
@@ -878,8 +878,8 @@ if has-wasmtime() {
     subtest 'call_indirect, table populated by active elements' => {
         my $emitter = Wasm::Emitter.new;
         my $table-idx = $emitter.table(tabletype(limitstype(4), funcref()));
-        my $callee-type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
-        my $caller-type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $callee-type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
+        my $caller-type-index = $emitter.function-type: functype(resulttype(i32()), resulttype(i32()));
         # Declare four functions returning integers, and add an active
         # elements section.
         my @indices;
@@ -888,7 +888,7 @@ if has-wasmtime() {
             my $expression = Wasm::Emitter::Expression.new;
             my $function = Wasm::Emitter::Function.new(:type-index($callee-type-index), :$expression);
             $expression.i32-const(4 * $_);
-            my $func-index = $emitter.add-function($function);
+            my $func-index = $emitter.function($function);
             my $ref-expression = Wasm::Emitter::Expression.new;
             $ref-expression.ref-func($func-index);
             @indices.push($func-index);
@@ -904,7 +904,7 @@ if has-wasmtime() {
         my $function = Wasm::Emitter::Function.new(:type-index($caller-type-index), :1parameters, :$expression);
         $expression.local-get(0);
         $expression.call-indirect($callee-type-index, $table-idx);
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [0], 0;
@@ -916,8 +916,8 @@ if has-wasmtime() {
     subtest 'call_indirect, table constructed from functions loaded from passive elements' => {
         my $emitter = Wasm::Emitter.new;
         my $table-idx = $emitter.table(tabletype(limitstype(4), funcref()));
-        my $callee-type-index = $emitter.intern-function-type: functype(resulttype(), resulttype(i32()));
-        my $caller-type-index = $emitter.intern-function-type: functype(resulttype(i32()), resulttype(i32()));
+        my $callee-type-index = $emitter.function-type: functype(resulttype(), resulttype(i32()));
+        my $caller-type-index = $emitter.function-type: functype(resulttype(i32()), resulttype(i32()));
         # Declare four functions returning integers, using declarative
         # elements to declare them up-front.
         my @indices;
@@ -926,7 +926,7 @@ if has-wasmtime() {
             my $expression = Wasm::Emitter::Expression.new;
             my $function = Wasm::Emitter::Function.new(:type-index($callee-type-index), :$expression);
             $expression.i32-const(4 * $_);
-            my $func-index = $emitter.add-function($function);
+            my $func-index = $emitter.function($function);
             my $ref-expression = Wasm::Emitter::Expression.new;
             $ref-expression.ref-func($func-index);
             @indices.push($func-index);
@@ -944,7 +944,7 @@ if has-wasmtime() {
         $expression.elem-drop($elements-idx);
         $expression.local-get(0);
         $expression.call-indirect($callee-type-index, $table-idx);
-        $emitter.export-function('test', $emitter.add-function($function));
+        $emitter.export-function('test', $emitter.function($function));
         my $buf = $emitter.assemble();
         pass 'Assembled module';
         is-function-output $buf, [0], 0;

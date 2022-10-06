@@ -52,7 +52,7 @@ class Wasm::Emitter {
     #| Returns a type index for a function type. If the function type was
     #| already registered, returns the existing index; failing that, adds
     #| it under a new index.
-    method intern-function-type(Wasm::Emitter::Types::FunctionType $type --> Int) {
+    method function-type(Wasm::Emitter::Types::FunctionType $type --> Int) {
         for @!function-types.kv -> Int $idx, Wasm::Emitter::Types::FunctionType $existing {
             return $idx if $existing.same-as($type);
         }
@@ -106,7 +106,7 @@ class Wasm::Emitter {
     }
 
     #| Add a declaration of a memory.
-    method add-memory(Wasm::Emitter::Types::LimitType $limits --> Int) {
+    method memory(Wasm::Emitter::Types::LimitType $limits --> Int) {
         @!memories.push($limits);
         @!memory-imports.elems + @!memories.end
     }
@@ -168,7 +168,7 @@ class Wasm::Emitter {
     }
 
     #| Declare a function.
-    method add-function(Wasm::Emitter::Function $function --> Int) {
+    method function(Wasm::Emitter::Function $function --> Int) {
         @!functions.push($function);
         @!function-imports.elems + @!functions.end
     }

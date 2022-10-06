@@ -19,7 +19,7 @@ class Wasm::Emitter::Function {
 
     #| Declare a local of the specified value type. Returns the index of the
     #| declared local.
-    method declare-local(Wasm::Emitter::Types::ValueType $type --> Int) {
+    method local(Wasm::Emitter::Types::ValueType $type --> Int) {
         @!locals.push($type);
         $!parameters + @!locals.end
     }

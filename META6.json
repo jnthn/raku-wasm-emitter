@@ -1,8 +1,8 @@
 {
   "name": "Wasm::Emitter",
   "description": "Emit the WebAssembly binary format.",
-  "version": "0.1",
-  "perl": "6.*",
+  "version": "0.9",
+  "perl": "6.d",
   "authors": [
     "Jonathan Worthington <jnthn@jnthn.net>"
   ],
@@ -26,5 +26,5 @@
   },
   "resources": [],
   "license": "MIT",
-  "source-url": "Write me!"
+  "source-url": "https://github.com/jnthn/raku-wasm-emitter"
 }
